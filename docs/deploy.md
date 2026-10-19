@@ -22,16 +22,12 @@ npm run db:migrate:remote
 ## 2. Admin secrets
 
 ```bash
-npm run setup-admin
+npm run setup-admin -- --deploy
 ```
 
-Scan the QR code with your authenticator app, then store the three values it prints:
-
-```bash
-npx wrangler secret put ADMIN_PATH
-npx wrangler secret put ADMIN_PASSWORD_HASH
-npx wrangler secret put TOTP_SECRET
-```
+It asks for your password (twice), shows a QR code to scan with your authenticator app, and stores
+the three secrets (`ADMIN_PATH`, `ADMIN_PASSWORD_HASH`, `TOTP_SECRET`) in Cloudflare for you.
+Without `--deploy` it only prints them, to store yourself with `npx wrangler secret put <NAME>`.
 
 Bookmark `https://math-path.kiaramaldonado.com/<ADMIN_PATH>` on each device you write from.
 **Use different values from your local `.dev.vars`.**
@@ -72,6 +68,6 @@ D1 also keeps 30 days of point-in-time history (**Time Travel**), see
 
 ## Changing the password or authenticator
 
-Run `npm run setup-admin` again and `wrangler secret put` the new values. All three change
+Run `npm run setup-admin -- --deploy` again. All three change
 (including the secret path), so update your bookmarks. To sign out every device, use
 **Admin → Settings → Log out of all devices**.
