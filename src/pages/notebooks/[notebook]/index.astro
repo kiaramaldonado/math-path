@@ -1,0 +1,31 @@
+---
+import Draft from "../../../components/Draft.astro";
+import NotebookTree from "../../../components/NotebookTree.astro";
+import Base from "../../../layouts/Base.astro";
+import { getNotebook, getNotebookTree } from "../../../lib/db";
+import { fmtDate } from "../../../lib/format";
+
+const db = Astro.locals.runtime.env.DB;
+const drafts = Astro.locals.isAdmin;
+const notebook = await getNotebook(db, { slug: Astro.params.notebook }, drafts);
+if (!notebook) return Astro.rewrite("/404");
+const sections = await getNotebookTree(db, notebook.id, drafts);
+const pageCount = sections.reduce((n, s) => n + s.pages.length, 0);
+const first = sections.find((s) => s.pages.length);
+---
+
+<Base title={notebook.title} section="notebooks" description={notebook.description || `My notes on ${notebook.title}.`}>
+  <div class="page-head nb-head" style={`--nb:${notebook.color}`}>
+    <p class="eyebrow"><a href="/notebooks">Notebooks</a>{notebook.subject && ` · ${notebook.subject}`}</p>
+    <h1>{notebook.title}<Draft status={notebook.status} edit={`/notebooks/${notebook.id}`} /></h1>
+    {notebook.description && <p>{notebook.description}</p>}
+    <p class="small muted">{pageCount} {pageCount === 1 ? "page" : "pages"} · updated {fmtDate(notebook.updated_at)}</p>
+    {first && <a class="btn btn-primary" href={`/notebooks/${notebook.slug}/${first.slug}/${first.pages[0].slug}`}>Start reading →</a>}
+  </div>
+  {pageCount ? <NotebookTree notebook={notebook} sections={sections} /> : <p class="empty">No pages here yet.</p>}
+</Base>
+
+<style>
+  .nb-head { border-left: 4px solid var(--nb); padding-left: 1.25rem; }
+  .nb-head .btn { margin-top: 0.5rem; }
+</style>

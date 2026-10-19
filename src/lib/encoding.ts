@@ -4,7 +4,7 @@ export function toBase64(bytes: Uint8Array): string {
   return btoa(s);
 }
 
-export function fromBase64(b64: string): Uint8Array {
+export function fromBase64(b64: string): Uint8Array<ArrayBuffer> {
   const s = atob(b64);
   const out = new Uint8Array(s.length);
   for (let i = 0; i < s.length; i++) out[i] = s.charCodeAt(i);
@@ -33,7 +33,7 @@ export function base32Encode(bytes: Uint8Array): string {
   return out;
 }
 
-export function base32Decode(input: string): Uint8Array {
+export function base32Decode(input: string): Uint8Array<ArrayBuffer> {
   const clean = input.toUpperCase().replace(/[\s=-]/g, "");
   const out: number[] = [];
   let bits = 0;

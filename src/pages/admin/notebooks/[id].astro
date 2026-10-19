@@ -1,0 +1,48 @@
+---
+import Admin from "../../../layouts/Admin.astro";
+import { getNotebook, getNotebookTree } from "../../../lib/db";
+
+const db = Astro.locals.runtime.env.DB;
+const notebook = await getNotebook(db, { id: Number(Astro.params.id) }, true);
+if (!notebook) return Astro.rewrite("/404");
+const sections = await getNotebookTree(db, notebook.id, true);
+const pageId = Number(Astro.url.searchParams.get("page")) || null;
+const data = JSON.stringify({ notebook, sections, pageId });
+---
+
+<Admin title={notebook.title} active="notebooks" workspace>
+  <div class="ws" id="workspace">
+    <aside class="ws-tree">
+      <div class="ws-tree-head">
+        <a href={`${Astro.locals.adminBase}/notebooks`} class="ws-back" aria-label="All notebooks">‹</a>
+        <span class="ws-nb-title">{notebook.title}</span>
+        <button type="button" class="ws-icon ws-settings" title="Notebook settings" aria-label="Notebook settings">⚙</button>
+      </div>
+      <div class="ws-tree-body"></div>
+    </aside>
+    <section class="ws-main">
+      <div class="ws-empty" hidden>
+        <p class="empty">Pick a page on the left, or add one with <b>+</b> next to a section.</p>
+      </div>
+      <div class="ws-page" hidden>
+        <div class="ws-pagebar">
+          <button type="button" class="ws-icon ws-tree-toggle" aria-label="Show pages">☰</button>
+          <input class="ws-title" type="text" aria-label="Page title" placeholder="Page title" maxlength="160" />
+          <span class="ws-save" aria-live="polite"></span>
+          <button type="button" class="btn btn-sm ws-status" title="Toggle draft / published"></button>
+          <a class="btn btn-sm btn-ghost ws-view" target="_blank" rel="noopener" title="Open public page">View ↗</a>
+        </div>
+        <div class="ws-toolbar" role="toolbar" aria-label="Formatting"></div>
+        <div class="ws-editor-wrap"><div class="ws-editor"></div></div>
+      </div>
+    </section>
+  </div>
+  <script type="application/json" id="ws-data" set:html={data.replace(/</g, "\\u003c")} />
+</Admin>
+
+<script>
+  import "../../../styles/editor.css";
+  import { initWorkspace } from "../../../editor/workspace";
+  const data = JSON.parse(document.getElementById("ws-data")!.textContent!);
+  initWorkspace(document.getElementById("workspace")!, data);
+</script>

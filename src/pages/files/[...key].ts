@@ -6,17 +6,17 @@ const PUBLIC_KEY = /^(u\/[0-9a-f-]{36}\.(png|jpg|gif|webp|avif|pdf)|drawings\/[a
 export const GET: APIRoute = async ({ locals, params, request }) => {
   const key = params.key ?? "";
   if (!PUBLIC_KEY.test(key)) return new Response("Not found", { status: 404 });
-  const obj = await locals.runtime.env.FILES.get(key, { onlyIf: request.headers });
+  const obj = await locals.runtime.env.FILES.get(key);
   if (!obj) return new Response("Not found", { status: 404 });
 
-  const headers = new Headers();
-  obj.writeHttpMetadata(headers);
+  // Set by hand: writeHttpMetadata() fails in the local dev proxy.
+  const headers = new Headers({ "Content-Type": obj.httpMetadata?.contentType ?? "application/octet-stream" });
   headers.set("ETag", obj.httpEtag);
   headers.set("X-Content-Type-Options", "nosniff");
   // SVGs could carry scripts; never let them run. (Chrome refuses to show sandboxed PDFs, so skip those.)
   if (!key.endsWith(".pdf")) headers.set("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; sandbox");
   // Drawings can be re-saved under the same key (the page adds ?v=), uploads never change.
   headers.set("Cache-Control", key.startsWith("drawings/") ? "public, max-age=300" : "public, max-age=31536000, immutable");
-  if (!("body" in obj)) return new Response(null, { status: 304, headers });
+  if (request.headers.get("If-None-Match") === obj.httpEtag) return new Response(null, { status: 304, headers });
   return new Response(obj.body, { headers });
 };

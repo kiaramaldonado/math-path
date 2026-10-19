@@ -1,0 +1,82 @@
+---
+import Admin from "../../../layouts/Admin.astro";
+import { createNotebook, listNotebooks, reorderNotebooks } from "../../../lib/db";
+
+const db = Astro.locals.runtime.env.DB;
+const base = Astro.locals.adminBase;
+
+if (Astro.request.method === "POST") {
+  const form = await Astro.request.formData();
+  const action = form.get("action");
+  if (action === "create") {
+    const title = String(form.get("title") ?? "").trim().slice(0, 120);
+    if (title) {
+      const nb = await createNotebook(db, title, String(form.get("subject") ?? "").trim().slice(0, 120));
+      return Astro.redirect(`${base}/notebooks/${nb.id}`, 303);
+    }
+  } else if (action === "move") {
+    const ids = (await listNotebooks(db, true)).map((n) => n.id);
+    const i = ids.indexOf(Number(form.get("id")));
+    const j = i + (form.get("dir") === "up" ? -1 : 1);
+    if (i >= 0 && j >= 0 && j < ids.length) {
+      [ids[i], ids[j]] = [ids[j], ids[i]];
+      await reorderNotebooks(db, ids);
+    }
+  }
+  return Astro.redirect(`${base}/notebooks`, 303);
+}
+
+const notebooks = await listNotebooks(db, true);
+---
+
+<Admin title="Notebooks" active="notebooks">
+  <div class="admin-head"><h1>Notebooks</h1></div>
+
+  <form method="post" class="panel">
+    <input type="hidden" name="action" value="create" />
+    <h2>New notebook</h2>
+    <div class="row">
+      <div class="field"><label for="nb-title">Title</label><input id="nb-title" name="title" required placeholder="e.g. Linear Algebra — Strang" /></div>
+      <div class="field"><label for="nb-subject">Subject</label><input id="nb-subject" name="subject" placeholder="e.g. Algebra" /></div>
+      <button class="btn btn-primary" style="align-self:flex-end;margin-bottom:1rem">Create</button>
+    </div>
+  </form>
+
+  {
+    notebooks.length ? (
+      <div class="panel table-scroll">
+        <table class="table">
+          <thead>
+            <tr><th>Notebook</th><th>Pages</th><th>Status</th><th>Order</th></tr>
+          </thead>
+          <tbody>
+            {notebooks.map((n, i) => (
+              <tr>
+                <td>
+                  <a href={`${base}/notebooks/${n.id}`}><span class="nb-swatch" style={`background:${n.color}`} /> <b>{n.title}</b></a>
+                  {n.subject && <div class="muted small">{n.subject}</div>}
+                </td>
+                <td>{n.page_count}</td>
+                <td>{n.status === "published" ? <span class="badge badge-done">Published</span> : <span class="badge badge-draft">Draft</span>}</td>
+                <td>
+                  <form method="post" class="row" style="gap:0.25rem;flex-wrap:nowrap">
+                    <input type="hidden" name="action" value="move" />
+                    <input type="hidden" name="id" value={n.id} />
+                    <button class="btn btn-sm btn-ghost" name="dir" value="up" disabled={i === 0} aria-label="Move up">↑</button>
+                    <button class="btn btn-sm btn-ghost" name="dir" value="down" disabled={i === notebooks.length - 1} aria-label="Move down">↓</button>
+                  </form>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    ) : (
+      <p class="empty">No notebooks yet. Create your first one above.</p>
+    )
+  }
+</Admin>
+
+<style>
+  .nb-swatch { display: inline-block; width: 0.7rem; height: 0.7rem; border-radius: 2px; vertical-align: middle; }
+</style>

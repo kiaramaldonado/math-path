@@ -52,7 +52,7 @@ export const onRequest = defineMiddleware(async (ctx, next) => {
       const res = await next(ctx.locals.isAdmin ? route.target : "/admin/login");
       res.headers.set("X-Robots-Tag", "noindex, nofollow");
       res.headers.set("Cache-Control", "no-store");
-      res.headers.set("Referrer-Policy", "no-referrer");
+      res.headers.set("Referrer-Policy", "same-origin"); // never leak the secret path to other sites
       return res;
     }
 

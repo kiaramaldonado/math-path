@@ -1,0 +1,38 @@
+---
+import Draft from "../../components/Draft.astro";
+import Base from "../../layouts/Base.astro";
+import { listNotebooks } from "../../lib/db";
+import { fmtDate } from "../../lib/format";
+
+const notebooks = await listNotebooks(Astro.locals.runtime.env.DB, Astro.locals.isAdmin);
+---
+
+<Base title="Notebooks" section="notebooks" description="My math notebooks, organised by subject, with notes, formulas and drawings.">
+  <div class="page-head">
+    <p class="eyebrow">Notebooks</p>
+    <h1>What I'm studying</h1>
+    <p>Notes I take while learning: definitions, proofs, worked examples and sketches.</p>
+  </div>
+  {
+    notebooks.length ? (
+      <div class="grid">
+        {notebooks.map((n) => (
+          <a class="card notebook" href={`/notebooks/${n.slug}`} style={`--nb:${n.color}`}>
+            {n.subject && <p class="eyebrow">{n.subject}</p>}
+            <h3>{n.title}<Draft status={n.status} /></h3>
+            {n.description && <p>{n.description}</p>}
+            <p class="meta">{n.page_count} {n.page_count === 1 ? "page" : "pages"} · updated {fmtDate(n.updated_at)}</p>
+          </a>
+        ))}
+      </div>
+    ) : (
+      <p class="empty">No notebooks published yet. Check back soon.</p>
+    )
+  }
+</Base>
+
+<style>
+  .notebook { border-top: 4px solid var(--nb); }
+  .notebook .eyebrow { margin-bottom: 0.3rem; }
+  .meta { margin-top: 0.75rem !important; font-size: 0.8rem !important; }
+</style>

@@ -3,7 +3,7 @@ import { base32Decode, base32Encode } from "./encoding";
 const STEP = 30;
 const DIGITS = 6;
 
-export async function hotp(secret: Uint8Array, counter: number): Promise<string> {
+export async function hotp(secret: Uint8Array<ArrayBuffer>, counter: number): Promise<string> {
   const msg = new ArrayBuffer(8);
   const view = new DataView(msg);
   view.setUint32(0, Math.floor(counter / 2 ** 32));

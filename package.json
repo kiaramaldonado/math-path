@@ -10,7 +10,7 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro build && wrangler dev",
-    "check": "astro build && tsc --noEmit && wrangler deploy --dry-run",
+    "check": "astro build && tsc --noEmit && tsc -p src/editor && tsc -p tests && wrangler deploy --dry-run",
     "test": "vitest run",
     "deploy": "wrangler deploy",
     "cf-typegen": "wrangler types",
@@ -40,6 +40,7 @@
   },
   "devDependencies": {
     "@types/katex": "0.16.8",
+    "@types/node": "22.20.5",
     "qrcode-terminal": "0.12.0",
     "vitest": "3.2.4",
     "wrangler": "4.151.2"

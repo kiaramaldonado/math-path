@@ -1,0 +1,10 @@
+{
+  "//": "Browser-only code: DOM types, without the Workers runtime types (they redefine Element).",
+  "extends": "astro/tsconfigs/strict",
+  "include": ["./**/*", "../lib/render.ts", "../lib/drawing.ts", "../lib/types.ts"],
+  "compilerOptions": {
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": [],
+    "noEmit": true
+  }
+}

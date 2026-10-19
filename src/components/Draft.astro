@@ -1,0 +1,20 @@
+---
+/** "Draft" badge + edit link, only ever rendered for the logged-in owner. */
+interface Props {
+  status: string;
+  edit?: string;
+}
+const { status, edit } = Astro.props;
+const { isAdmin, adminBase } = Astro.locals;
+---
+
+{isAdmin && (
+  <span class="owner-tools">
+    {status === "draft" && <span class="badge badge-draft">Draft</span>}
+    {edit && <a class="badge" href={`${adminBase}${edit}`}>Edit</a>}
+  </span>
+)}
+
+<style>
+  .owner-tools { display: inline-flex; gap: 0.35rem; vertical-align: middle; margin-left: 0.4rem; }
+</style>

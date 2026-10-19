@@ -1,0 +1,60 @@
+---
+import Draft from "../../../../components/Draft.astro";
+import NotebookTree from "../../../../components/NotebookTree.astro";
+import Base from "../../../../layouts/Base.astro";
+import { getNotebook, getNotebookTree, getPageByPath } from "../../../../lib/db";
+import { fmtDate } from "../../../../lib/format";
+import { docText, renderDoc } from "../../../../lib/render";
+
+const db = Astro.locals.runtime.env.DB;
+const drafts = Astro.locals.isAdmin;
+const { notebook: nbSlug = "", section: secSlug = "", page: pageSlug = "" } = Astro.params;
+const page = await getPageByPath(db, nbSlug, secSlug, pageSlug, drafts);
+const notebook = page && (await getNotebook(db, { slug: nbSlug }, drafts));
+if (!page || !notebook) return Astro.rewrite("/404");
+
+const sections = await getNotebookTree(db, notebook.id, drafts);
+const section = sections.find((s) => s.id === page.section_id)!;
+const flat = sections.flatMap((s) => s.pages.map((p) => ({ ...p, href: `/notebooks/${notebook.slug}/${s.slug}/${p.slug}` })));
+const index = flat.findIndex((p) => p.id === page.id);
+const prev = flat[index - 1];
+const next = flat[index + 1];
+---
+
+<Base title={`${page.title} · ${notebook.title}`} section="notebooks" description={docText(page.content_json, 160) || page.title} wide>
+  <div class="note-layout">
+    <aside class="note-side">
+      <a href={`/notebooks/${notebook.slug}`} class="note-nb" style={`--nb:${notebook.color}`}>{notebook.title}</a>
+      <details class="note-toc" open>
+        <summary>Contents</summary>
+        <NotebookTree notebook={notebook} sections={sections} currentPageId={page.id} />
+      </details>
+    </aside>
+    <article class="note">
+      <p class="eyebrow">{section.title}</p>
+      <h1>{page.title}<Draft status={page.status} edit={`/notebooks/${notebook.id}?page=${page.id}`} /></h1>
+      <p class="small muted">Updated {fmtDate(page.updated_at)}</p>
+      <div class="prose" set:html={renderDoc(page.content_json)} />
+      <nav class="pager" aria-label="Pages">
+        {prev ? <a href={prev.href} class="card"><span class="muted small">← Previous</span><b>{prev.title}</b></a> : <span />}
+        {next && <a href={next.href} class="card next"><span class="muted small">Next →</span><b>{next.title}</b></a>}
+      </nav>
+    </article>
+  </div>
+</Base>
+
+<style>
+  .note-layout { display: grid; gap: 2rem; }
+  @media (min-width: 960px) {
+    .note-layout { grid-template-columns: 240px minmax(0, 1fr); gap: 3rem; }
+    .note-side { position: sticky; top: calc(var(--nav-height) + 1.5rem); align-self: start; max-height: calc(100vh - var(--nav-height) - 3rem); overflow-y: auto; }
+  }
+  .note-nb { display: block; font: 600 1.05rem var(--font-heading); color: var(--color-text); border-left: 3px solid var(--nb); padding-left: 0.6rem; margin-bottom: 1rem; }
+  .note-toc summary { cursor: pointer; font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 0.6rem; }
+  @media (min-width: 960px) { .note-toc summary { display: none; } }
+  .note h1 { font-size: var(--text-h1); margin-bottom: 0.2rem; }
+  .note .prose { margin-top: 2rem; }
+  .pager { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 3.5rem; max-width: 72ch; }
+  .pager .card { display: flex; flex-direction: column; gap: 0.2rem; }
+  .pager .next { text-align: right; grid-column: 2; }
+</style>
