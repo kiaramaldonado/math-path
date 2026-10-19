@@ -1,6 +1,8 @@
 <div align="center">
 
-# ∫ Math Path
+<img src="public/favicon.svg" alt="Math Path logo" width="96" height="96">
+
+# Math Path
 
 **A public journal of my path learning mathematics.**
 
