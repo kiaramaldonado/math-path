@@ -1,0 +1,29 @@
+{
+	"name": "math-path",
+	"compatibility_date": "2025-10-08",
+	"compatibility_flags": ["nodejs_compat"],
+	"main": "./dist/_worker.js/index.js",
+	"assets": {
+		"directory": "./dist",
+		"binding": "ASSETS"
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "math-path",
+			"database_id": "REPLACE_WITH_D1_DATABASE_ID",
+			"migrations_dir": "migrations"
+		}
+	],
+	"r2_buckets": [
+		{
+			"binding": "FILES",
+			"bucket_name": "math-path-files"
+		}
+	],
+	"routes": [
+		{ "pattern": "math-path.kiaramaldonado.com", "custom_domain": true }
+	],
+	"observability": { "enabled": true },
+	"upload_source_maps": true
+}

@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Reject AI co-author / attribution lines in every commit, however it is made.
+if grep -qiE '^co-authored-by:|generated with \[?claude' "$1"; then
+  echo "commit-msg: remove co-author / AI attribution lines" >&2
+  exit 1
+fi

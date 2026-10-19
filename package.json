@@ -1,0 +1,47 @@
+{
+  "name": "math-path",
+  "description": "A personal journal of my path learning mathematics.",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro build && wrangler dev",
+    "check": "astro build && tsc --noEmit && wrangler deploy --dry-run",
+    "test": "vitest run",
+    "deploy": "wrangler deploy",
+    "cf-typegen": "wrangler types",
+    "db:migrate:local": "wrangler d1 migrations apply math-path --local",
+    "db:migrate:remote": "wrangler d1 migrations apply math-path --remote",
+    "setup-admin": "node scripts/setup-admin.mjs"
+  },
+  "dependencies": {
+    "@astrojs/cloudflare": "12.6.12",
+    "@tiptap/core": "3.32.0",
+    "@tiptap/extension-highlight": "3.32.0",
+    "@tiptap/extension-image": "3.32.0",
+    "@tiptap/extension-list": "3.32.0",
+    "@tiptap/extension-subscript": "3.32.0",
+    "@tiptap/extension-superscript": "3.32.0",
+    "@tiptap/extension-table": "3.32.0",
+    "@tiptap/extension-text-align": "3.32.0",
+    "@tiptap/extension-text-style": "3.32.0",
+    "@tiptap/extensions": "3.32.0",
+    "@tiptap/pm": "3.32.0",
+    "@tiptap/starter-kit": "3.32.0",
+    "@tiptap/suggestion": "3.32.0",
+    "astro": "5.16.9",
+    "katex": "0.19.0",
+    "perfect-freehand": "1.2.3",
+    "typescript": "5.9.3"
+  },
+  "devDependencies": {
+    "@types/katex": "0.16.8",
+    "qrcode-terminal": "0.12.0",
+    "vitest": "3.2.4",
+    "wrangler": "4.151.2"
+  }
+}

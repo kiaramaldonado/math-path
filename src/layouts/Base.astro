@@ -1,0 +1,93 @@
+---
+import "../styles/global.css";
+import "../styles/content.css";
+
+interface Props {
+  title?: string;
+  description?: string;
+  /** Highlighted nav item. */
+  section?: "notebooks" | "blog" | "projects" | "certificates" | "roadmap";
+  wide?: boolean;
+}
+
+const { title, description = "A public journal of my path learning mathematics: notes, projects, posts and certificates.", section, wide = false } = Astro.props;
+const { isAdmin, adminBase } = Astro.locals;
+const fullTitle = title ? `${title} · Math Path` : "Math Path · Kiara Maldonado";
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const nav = [
+  ["notebooks", "Notebooks", "/notebooks"],
+  ["blog", "Blog", "/blog"],
+  ["projects", "Projects", "/projects"],
+  ["certificates", "Certificates", "/certificates"],
+  ["roadmap", "Roadmap", "/roadmap"],
+] as const;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="alternate" type="application/rss+xml" title="Math Path" href="/rss.xml" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta name="theme-color" content="#fafaf8" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container bar">
+        <a href="/" class="brand"><span class="mark" aria-hidden="true">∫</span> Math Path</a>
+        <nav class="nav" aria-label="Main">
+          {nav.map(([key, label, href]) => <a href={href} aria-current={section === key ? "page" : undefined}>{label}</a>)}
+          {isAdmin && <a href={adminBase} class="admin-link">Admin</a>}
+        </nav>
+      </div>
+    </header>
+    <main>
+      <div class:list={["container", { wide }]}>
+        <slot />
+      </div>
+    </main>
+    <footer class="site-footer">
+      <div class="container bar">
+        <span>Kiara Maldonado · learning math in public</span>
+        <span><a href="https://kiaramaldonado.com">kiaramaldonado.com</a> · <a href="/rss.xml">RSS</a></span>
+      </div>
+    </footer>
+  </body>
+</html>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: rgba(250, 250, 248, 0.92);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--color-border);
+  }
+  .bar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+  .site-header .bar { height: var(--nav-height); }
+  .brand { font: 600 1.2rem var(--font-heading); color: var(--color-text); display: flex; align-items: center; gap: 0.4rem; }
+  .brand:hover { text-decoration: none; color: var(--color-text); }
+  .mark { font-size: 1.45rem; color: var(--color-primary); font-style: italic; }
+  .nav { display: flex; gap: 0.1rem; overflow-x: auto; scrollbar-width: none; }
+  .nav::-webkit-scrollbar { display: none; }
+  .nav a { padding: 0.4rem 0.6rem; border-radius: var(--radius-md); color: var(--color-text-muted); font-size: 0.9rem; white-space: nowrap; }
+  .nav a:hover { background: var(--color-bg-muted); color: var(--color-text); text-decoration: none; }
+  .nav a[aria-current="page"] { color: var(--color-text); font-weight: 600; }
+  .admin-link { color: var(--color-warning) !important; }
+  /* Phones: brand on top, nav scrolls sideways underneath. */
+  @media (max-width: 759px) {
+    .site-header .bar { flex-direction: column; align-items: stretch; height: auto; gap: 0.2rem; padding-top: 0.6rem; padding-bottom: 0.4rem; }
+    .nav { margin: 0 -0.6rem; }
+  }
+  .site-footer { border-top: 1px solid var(--color-border); padding: 1.5rem 0; font-size: 0.85rem; color: var(--color-text-muted); }
+  .site-footer .bar { flex-wrap: wrap; }
+  .wide { max-width: 1280px; }
+</style>

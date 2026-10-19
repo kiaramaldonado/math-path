@@ -1,0 +1,5 @@
+# Copy to .dev.vars for local development (never commit .dev.vars).
+# Generate real values with: npm run setup-admin
+ADMIN_PATH=/k-change-me
+ADMIN_PASSWORD_HASH=pbkdf2$100000$salt$hash
+TOTP_SECRET=BASE32SECRET
