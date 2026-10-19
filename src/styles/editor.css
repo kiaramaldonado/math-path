@@ -140,6 +140,8 @@
 .mp-popover.sheet .math-editor { width: 100%; }
 .math-input { font: 0.95rem/1.45 var(--font-mono) !important; min-height: 0 !important; }
 .math-preview { min-height: 2.6rem; padding: 0.5rem; margin: 0.5rem 0; background: var(--color-bg); border-radius: var(--radius-md); overflow-x: auto; display: flex; align-items: center; justify-content: center; }
+.math-hint { font-size: 0.75rem; color: var(--color-text-muted); margin: -0.2rem 0 0.5rem; line-height: 1.5; }
+.math-hint code { font-family: var(--font-mono); background: var(--color-bg-muted); padding: 0 0.25em; border-radius: 3px; }
 .math-preview.invalid { color: var(--color-danger); font-size: 0.82rem; justify-content: flex-start; }
 .math-preview .katex-display { margin: 0; }
 .math-tabs { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; border-bottom: 1px solid var(--color-border); }

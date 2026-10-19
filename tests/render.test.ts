@@ -39,6 +39,14 @@ describe("renderDoc", () => {
     expect(html).toContain("katex-display");
   });
 
+  it("shows escaped braces, explicit spaces and text in formulas", () => {
+    const html = renderDoc(doc({ type: "blockMath", attrs: { latex: "A =\\ \\{ 1, 2 \\}\\quad \\text{for all n}" } }));
+    expect(html).toContain(">{</span>");
+    expect(html).toContain(">}</span>");
+    expect(html).toContain("for all n");
+    expect(html).toContain("mspace"); // \quad and "\ " become real spacing
+  });
+
   it("does not throw on broken LaTeX", () => {
     expect(() => renderDoc(doc({ type: "blockMath", attrs: { latex: "\\frac{1" } }))).not.toThrow();
   });

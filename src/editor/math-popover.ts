@@ -7,6 +7,11 @@ const GROUPS: [string, [string, string][]][] = [
     ["a/b", "\\frac{}{}"], ["√", "\\sqrt{}"], ["ⁿ√", "\\sqrt[]{}"], ["xⁿ", "^{}"], ["xᵢ", "_{}"],
     ["( )", "\\left( {} \\right)"], ["|x|", "\\left| {} \\right|"], ["vec", "\\vec{}"], ["x̂", "\\hat{}"], ["x̄", "\\overline{}"],
   ]],
+  // LaTeX ignores spaces and treats { } as invisible grouping, so offer the explicit forms.
+  ["Spacing & text", [
+    ["space", "\\ "], ["wide", "\\quad "], ["wider", "\\qquad "], ["thin", "\\, "],
+    ["text", "\\text{}"], ["{ }", "\\{ {} \\}"], ["⟨ ⟩", "\\langle {} \\rangle"], ["new line", " \\\\ "],
+  ]],
   ["Calculus", [
     ["∑", "\\sum_{i=1}^{n} "], ["∏", "\\prod_{i=1}^{n} "], ["∫", "\\int_{a}^{b} {} \\, dx"], ["∮", "\\oint "], ["lim", "\\lim_{x \\to {}} "],
     ["d/dx", "\\frac{d}{dx} "], ["∂", "\\partial "], ["∇", "\\nabla "], ["∞", "\\infty "], ["→", "\\to "],
@@ -39,6 +44,19 @@ export function editMath(anchor: HTMLElement | DOMRect, latex: string, display: 
   const input = h("textarea", { class: "math-input", spellcheck: "false", autocapitalize: "off", rows: display ? 4 : 2, placeholder: "e.g. \\frac{a}{b} + x^2" }) as HTMLTextAreaElement;
   input.value = latex;
   const preview = h("div", { class: "math-preview" });
+  const hint = h(
+    "p",
+    { class: "math-hint" },
+    "Spaces and { } don't show in formulas. Use ",
+    h("code", {}, "\\ "),
+    " or ",
+    h("code", {}, "\\quad"),
+    " for space, ",
+    h("code", {}, "\\text{…}"),
+    " for words and ",
+    h("code", {}, "\\{ \\}"),
+    " for braces — or the Spacing & text tab.",
+  );
   const paint = () => {
     try {
       katex.render(input.value || "\\square", preview, { displayMode: true, throwOnError: true, strict: "ignore" });
@@ -68,7 +86,7 @@ export function editMath(anchor: HTMLElement | DOMRect, latex: string, display: 
   const palette = h("div", { class: "math-palette" });
   const tabs = h("div", { class: "math-tabs" });
   const renderPalette = () => {
-    tabs.replaceChildren(...GROUPS.map(([name], i) => h("button", { type: "button", class: i === tab ? "active" : "", onclick: () => ((tab = i), renderPalette()) }, name)));
+    tabs.replaceChildren(...GROUPS.map(([name], i) => h("button", { type: "button", class: i === tab ? "active" : "", onmousedown: (e: Event) => e.preventDefault(), onclick: () => ((tab = i), renderPalette(), input.focus()) }, name)));
     palette.replaceChildren(...GROUPS[tab][1].map(([label, snip]) => h("button", { type: "button", title: snip.trim(), onclick: () => insert(snip) }, label)));
   };
   renderPalette();
@@ -91,6 +109,7 @@ export function editMath(anchor: HTMLElement | DOMRect, latex: string, display: 
     h("div", { class: "pop-title" }, display ? "Block formula" : "Inline formula", h("span", { class: "hint" }, display ? "⌘/Ctrl + Enter to finish" : "Enter to finish")),
     input,
     preview,
+    hint,
     tabs,
     palette,
     h(
