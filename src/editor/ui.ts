@@ -1,5 +1,8 @@
 // Tiny DOM helpers for popovers and menus (no framework).
 
+/** Autosave waits this long after the last edit (leaving the page or app saves at once). */
+export const AUTOSAVE_DELAY = 5000;
+
 type Attrs = Record<string, string | boolean | number | ((e: Event) => void) | undefined>;
 
 export function h<K extends keyof HTMLElementTagNameMap>(tag: K, attrs: Attrs = {}, ...children: (Node | string | null | undefined | false)[]) {
