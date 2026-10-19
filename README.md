@@ -11,6 +11,7 @@ written from a hidden admin that works on any device.
 
 [**math-path.kiaramaldonado.com**](https://math-path.kiaramaldonado.com)
 
+[![CI](https://github.com/kiaramaldonado/math-path/actions/workflows/ci.yml/badge.svg)](https://github.com/kiaramaldonado/math-path/actions/workflows/ci.yml)
 [![License: AGPL v3](https://img.shields.io/badge/license-AGPL--3.0-1e3a5f)](LICENSE)
 [![Commercial licence available](https://img.shields.io/badge/commercial%20licence-available-5c5a56)](COMMERCIAL-LICENSE.md)
 ![Astro](https://img.shields.io/badge/Astro-5-161616)
