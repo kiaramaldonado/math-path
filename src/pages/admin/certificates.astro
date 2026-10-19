@@ -1,0 +1,108 @@
+---
+import Admin from "../../layouts/Admin.astro";
+import { deleteRow, insertRow, listCertificates, listNotebooks, updateRow } from "../../lib/db";
+import { storeUpload } from "../../lib/files";
+import { fmtDate } from "../../lib/format";
+import type { Certificate } from "../../lib/types";
+
+const env = Astro.locals.runtime.env;
+const base = Astro.locals.adminBase;
+let error = "";
+
+if (Astro.request.method === "POST") {
+  const form = await Astro.request.formData();
+  const id = Number(form.get("id")) || null;
+  if (form.get("action") === "delete" && id) {
+    await deleteRow(env.DB, "certificates", id);
+    return Astro.redirect(`${base}/certificates`, 303);
+  }
+  const url = String(form.get("url") ?? "").trim();
+  const values: Record<string, unknown> = {
+    title: String(form.get("title") ?? "").trim().slice(0, 200),
+    issuer: String(form.get("issuer") ?? "").trim().slice(0, 200),
+    issued_on: String(form.get("issued_on") ?? "") || null,
+    url: /^https?:\/\//.test(url) ? url.slice(0, 500) : "",
+    notebook_id: Number(form.get("notebook_id")) || null,
+    status: form.get("published") ? "published" : "draft",
+  };
+  const file = form.get("file");
+  if (file instanceof File && file.size > 0) {
+    const stored = await storeUpload(env, file);
+    if ("error" in stored) error = stored.error;
+    else values.file_key = stored.key;
+  }
+  if (!values.title) error = "Title is required";
+  if (!error) {
+    if (id) await updateRow(env.DB, "certificates", id, values, false);
+    else await insertRow(env.DB, "certificates", values);
+    return Astro.redirect(`${base}/certificates`, 303);
+  }
+}
+
+const [certificates, notebooks] = await Promise.all([listCertificates(env.DB, true), listNotebooks(env.DB, true)]);
+const editing: Partial<Certificate> = certificates.find((c) => c.id === Number(Astro.url.searchParams.get("edit"))) ?? {};
+---
+
+<Admin title="Certificates" active="certificates">
+  <div class="admin-head"><h1>Certificates</h1></div>
+
+  <form method="post" enctype="multipart/form-data" class="panel">
+    <h2>{editing.id ? "Edit certificate" : "Add a certificate"}</h2>
+    {editing.id && <input type="hidden" name="id" value={editing.id} />}
+    <div class="row">
+      <div class="field"><label for="c-title">Title</label><input id="c-title" name="title" required value={editing.title} placeholder="e.g. Calculus One" /></div>
+      <div class="field"><label for="c-issuer">Issued by</label><input id="c-issuer" name="issuer" value={editing.issuer} placeholder="e.g. Coursera · Ohio State" /></div>
+    </div>
+    <div class="row">
+      <div class="field"><label for="c-date">Date</label><input id="c-date" type="date" name="issued_on" value={editing.issued_on ?? ""} /></div>
+      <div class="field"><label for="c-url">Verification link</label><input id="c-url" type="url" name="url" value={editing.url} placeholder="https://…" /></div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label for="c-file">File (PDF or image){editing.file_key && " — leave empty to keep the current one"}</label>
+        <input id="c-file" type="file" name="file" accept="application/pdf,image/*" />
+      </div>
+      <div class="field">
+        <label for="c-nb">Related notebook</label>
+        <select id="c-nb" name="notebook_id">
+          <option value="">None</option>
+          {notebooks.map((n) => <option value={n.id} selected={n.id === editing.notebook_id}>{n.title}</option>)}
+        </select>
+      </div>
+    </div>
+    <label class="check"><input type="checkbox" name="published" checked={editing.id ? editing.status === "published" : true} /> Published</label>
+    {error && <p class="error">{error}</p>}
+    <div class="row" style="margin-top:1rem">
+      <button class="btn btn-primary">{editing.id ? "Save" : "Add certificate"}</button>
+      {editing.id && <a class="btn btn-ghost" href={`${base}/certificates`}>Cancel</a>}
+    </div>
+  </form>
+
+  {
+    certificates.length > 0 && (
+      <div class="panel table-scroll">
+        <table class="table">
+          <thead><tr><th>Certificate</th><th>Date</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            {certificates.map((c) => (
+              <tr>
+                <td><b>{c.title}</b><div class="muted small">{c.issuer}</div></td>
+                <td class="small">{fmtDate(c.issued_on)}</td>
+                <td>{c.status === "published" ? <span class="badge badge-done">Published</span> : <span class="badge badge-draft">Draft</span>}</td>
+                <td>
+                  <div class="row" style="gap:0.3rem;flex-wrap:nowrap">
+                    <a class="btn btn-sm" href={`${base}/certificates?edit=${c.id}`}>Edit</a>
+                    <form method="post" onsubmit="return confirm('Delete this certificate?')">
+                      <input type="hidden" name="action" value="delete" /><input type="hidden" name="id" value={c.id} />
+                      <button class="btn btn-sm btn-danger">Delete</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )
+  }
+</Admin>

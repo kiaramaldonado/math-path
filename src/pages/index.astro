@@ -1,4 +1,95 @@
 ---
+import Draft from "../components/Draft.astro";
+import PostList from "../components/PostList.astro";
 import Base from "../layouts/Base.astro";
+import { listNotebooks, listRoadmap, recentPages } from "../lib/db";
+import { fmtDate } from "../lib/format";
+
+const db = Astro.locals.runtime.env.DB;
+const drafts = Astro.locals.isAdmin;
+const [notebooks, pages, roadmap] = await Promise.all([listNotebooks(db, drafts), recentPages(db, 6, drafts), listRoadmap(db, drafts)]);
+const now = roadmap.filter((r) => r.progress === "in_progress");
 ---
-<Base><h1>Math Path</h1></Base>
+
+<Base>
+  <section class="hero">
+    <p class="eyebrow">Kiara Maldonado</p>
+    <h1>Learning mathematics, <em>in public</em>.</h1>
+    <p>This is my journal: the notebooks I keep while studying, the projects I build, and the courses I finish along the way.</p>
+    <div class="row">
+      <a class="btn btn-primary" href="/notebooks">Read the notebooks</a>
+      <a class="btn" href="/roadmap">See the roadmap</a>
+    </div>
+  </section>
+
+  {
+    now.length > 0 && (
+      <section class="block">
+        <h2>Currently studying</h2>
+        <ul class="now">
+          {now.map((r) => (
+            <li>
+              <b>{r.title}</b> <span class="muted small">· {r.kind}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )
+  }
+
+  {
+    pages.length > 0 && (
+      <section class="block">
+        <div class="block-head"><h2>Latest notes</h2><a href="/notebooks">All notebooks →</a></div>
+        <ul class="list">
+          {pages.map((p) => (
+            <li>
+              <a href={`/notebooks/${p.notebook_slug}/${p.section_slug}/${p.slug}`} class="note-row">
+                <span><b>{p.title}</b> <span class="muted small">· {p.notebook_title} › {p.section_title}</span></span>
+                <span class="muted small">{fmtDate(p.updated_at)}</span>
+              </a>
+              <Draft status={p.status} />
+            </li>
+          ))}
+        </ul>
+      </section>
+    )
+  }
+
+  {
+    notebooks.length > 0 && (
+      <section class="block">
+        <div class="block-head"><h2>Notebooks</h2></div>
+        <div class="grid">
+          {notebooks.slice(0, 6).map((n) => (
+            <a class="card" href={`/notebooks/${n.slug}`} style={`border-top:4px solid ${n.color}`}>
+              <h3>{n.title}</h3>
+              <p>{n.page_count} {n.page_count === 1 ? "page" : "pages"}{n.subject && ` · ${n.subject}`}</p>
+            </a>
+          ))}
+        </div>
+      </section>
+    )
+  }
+
+  <section class="block">
+    <div class="block-head"><h2>From the blog</h2><a href="/blog">All posts →</a></div>
+    <PostList kind="blog" limit={4} />
+  </section>
+</Base>
+
+<style>
+  .hero { padding: 2rem 0 3rem; max-width: 46rem; }
+  .hero h1 { font-size: var(--text-display); line-height: 1.05; margin-bottom: 1rem; }
+  .hero h1 em { color: var(--color-primary); }
+  .hero p { font-size: 1.15rem; color: var(--color-text-muted); }
+  .hero .row { margin-top: 1.5rem; }
+  .block { margin-top: 3rem; }
+  .block h2 { font-size: var(--text-h2); margin: 0; }
+  .block-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; margin-bottom: 1rem; }
+  .now { padding-left: 1.2rem; margin-top: 0.75rem; }
+  .note-row { display: flex; justify-content: space-between; gap: 1rem; color: var(--color-text); }
+  .note-row:hover { text-decoration: none; }
+  .note-row:hover b { color: var(--color-primary); }
+  @media (max-width: 600px) { .note-row { flex-direction: column; gap: 0; } }
+</style>

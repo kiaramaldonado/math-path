@@ -143,6 +143,7 @@ export async function getPageByPath(db: D1Database, notebookSlug: string, sectio
 }
 
 export interface RecentPage extends PageMeta {
+  notebook_id: number;
   notebook_slug: string;
   notebook_title: string;
   section_slug: string;
@@ -153,7 +154,7 @@ export async function recentPages(db: D1Database, limit: number, drafts: boolean
   const { results } = await db
     .prepare(
       `SELECT p.id, p.section_id, p.slug, p.title, p.position, p.status, p.updated_at,
-              n.slug AS notebook_slug, n.title AS notebook_title, s.slug AS section_slug, s.title AS section_title
+              n.id AS notebook_id, n.slug AS notebook_slug, n.title AS notebook_title, s.slug AS section_slug, s.title AS section_title
        FROM pages p JOIN sections s ON s.id = p.section_id JOIN notebooks n ON n.id = s.notebook_id
        WHERE 1=1${pub("p", drafts)}${pub("s", drafts)}${pub("n", drafts)}
        ORDER BY p.updated_at DESC LIMIT ?`,
@@ -168,7 +169,7 @@ export async function searchPages(db: D1Database, q: string, limit = 12): Promis
   const { results } = await db
     .prepare(
       `SELECT p.id, p.section_id, p.slug, p.title, p.position, p.status, p.updated_at,
-              n.slug AS notebook_slug, n.title AS notebook_title, s.slug AS section_slug, s.title AS section_title
+              n.id AS notebook_id, n.slug AS notebook_slug, n.title AS notebook_title, s.slug AS section_slug, s.title AS section_title
        FROM pages p JOIN sections s ON s.id = p.section_id JOIN notebooks n ON n.id = s.notebook_id
        WHERE p.title LIKE ? OR n.title LIKE ? ORDER BY p.updated_at DESC LIMIT ?`,
     )

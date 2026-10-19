@@ -1,0 +1,52 @@
+---
+import Admin from "../../../layouts/Admin.astro";
+import { createPost, listPosts } from "../../../lib/db";
+import { fmtDate } from "../../../lib/format";
+
+const db = Astro.locals.runtime.env.DB;
+const base = Astro.locals.adminBase;
+const kind = Astro.url.searchParams.get("kind") === "project" ? "project" : "blog";
+const label = kind === "blog" ? "Blog posts" : "Projects";
+
+if (Astro.request.method === "POST") {
+  const form = await Astro.request.formData();
+  const title = String(form.get("title") ?? "").trim().slice(0, 160);
+  if (title) {
+    const post = await createPost(db, kind, title);
+    return Astro.redirect(`${base}/posts/${post.id}`, 303);
+  }
+  return Astro.redirect(`${base}/posts?kind=${kind}`, 303);
+}
+const posts = await listPosts(db, kind, true);
+---
+
+<Admin title={label} active={kind}>
+  <div class="admin-head"><h1>{label}</h1></div>
+  <form method="post" class="panel">
+    <h2>New {kind === "blog" ? "post" : "project"}</h2>
+    <div class="row">
+      <div class="field"><label for="title">Title</label><input id="title" name="title" required placeholder={kind === "blog" ? "e.g. Why I'm learning maths again" : "e.g. Visualising eigenvectors"} /></div>
+      <button class="btn btn-primary" style="align-self:flex-end;margin-bottom:1rem">Create</button>
+    </div>
+  </form>
+  {
+    posts.length ? (
+      <div class="panel table-scroll">
+        <table class="table">
+          <thead><tr><th>Title</th><th>Status</th><th>Date</th></tr></thead>
+          <tbody>
+            {posts.map((p) => (
+              <tr>
+                <td><a href={`${base}/posts/${p.id}`}><b>{p.title}</b></a>{p.summary && <div class="muted small">{p.summary}</div>}</td>
+                <td>{p.status === "published" ? <span class="badge badge-done">Published</span> : <span class="badge badge-draft">Draft</span>}</td>
+                <td class="small muted">{fmtDate(p.published_at ?? p.updated_at)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    ) : (
+      <p class="empty">Nothing here yet.</p>
+    )
+  }
+</Admin>

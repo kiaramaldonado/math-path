@@ -1,0 +1,121 @@
+---
+import Admin from "../../layouts/Admin.astro";
+import { deleteRow, insertRow, listNotebooks, listRoadmap, updateRow } from "../../lib/db";
+import { fmtDate } from "../../lib/format";
+import type { RoadmapItem } from "../../lib/types";
+
+const db = Astro.locals.runtime.env.DB;
+const base = Astro.locals.adminBase;
+const KINDS = ["course", "book", "topic", "milestone"] as const;
+const PROGRESS = [["planned", "Planned"], ["in_progress", "In progress"], ["done", "Done"]] as const;
+
+if (Astro.request.method === "POST") {
+  const form = await Astro.request.formData();
+  const id = Number(form.get("id")) || null;
+  const action = form.get("action");
+  if (action === "delete" && id) {
+    await deleteRow(db, "roadmap_items", id);
+  } else if (action === "move" && id) {
+    const items = await listRoadmap(db, true);
+    const i = items.findIndex((r) => r.id === id);
+    const j = i + (form.get("dir") === "up" ? -1 : 1);
+    if (i >= 0 && j >= 0 && j < items.length) {
+      [items[i], items[j]] = [items[j], items[i]];
+      await db.batch(items.map((r, pos) => db.prepare("UPDATE roadmap_items SET position = ? WHERE id = ?").bind(pos, r.id)));
+    }
+  } else {
+    const kind = String(form.get("kind"));
+    const progress = String(form.get("progress"));
+    const url = String(form.get("url") ?? "").trim();
+    const values: Record<string, unknown> = {
+      kind: KINDS.includes(kind as never) ? kind : "topic",
+      title: String(form.get("title") ?? "").trim().slice(0, 200),
+      progress: PROGRESS.some(([p]) => p === progress) ? progress : "planned",
+      started_on: String(form.get("started_on") ?? "") || null,
+      finished_on: String(form.get("finished_on") ?? "") || null,
+      notes: String(form.get("notes") ?? "").trim().slice(0, 2000),
+      url: /^https?:\/\//.test(url) ? url.slice(0, 500) : "",
+      notebook_id: Number(form.get("notebook_id")) || null,
+      status: form.get("published") ? "published" : "draft",
+    };
+    if (values.title) {
+      if (id) await updateRow(db, "roadmap_items", id, values, false);
+      else {
+        const items = await listRoadmap(db, true);
+        await insertRow(db, "roadmap_items", { ...values, position: items.length });
+      }
+    }
+  }
+  return Astro.redirect(`${base}/roadmap`, 303);
+}
+
+const [items, notebooks] = await Promise.all([listRoadmap(db, true), listNotebooks(db, true)]);
+const editing: Partial<RoadmapItem> = items.find((r) => r.id === Number(Astro.url.searchParams.get("edit"))) ?? {};
+const progressLabel = Object.fromEntries(PROGRESS);
+---
+
+<Admin title="Roadmap" active="roadmap">
+  <div class="admin-head"><h1>Roadmap</h1></div>
+  <p class="muted" style="margin-top:-1rem">Courses, books, topics and milestones on your path, in the order you want them shown.</p>
+
+  <form method="post" class="panel">
+    <h2>{editing.id ? "Edit item" : "Add to the roadmap"}</h2>
+    {editing.id && <input type="hidden" name="id" value={editing.id} />}
+    <div class="row">
+      <div class="field" style="flex:2 1 260px"><label for="r-title">Title</label><input id="r-title" name="title" required value={editing.title} placeholder="e.g. Linear Algebra Done Right" /></div>
+      <div class="field"><label for="r-kind">Type</label><select id="r-kind" name="kind">{KINDS.map((k) => <option value={k} selected={k === editing.kind}>{k[0].toUpperCase() + k.slice(1)}</option>)}</select></div>
+      <div class="field"><label for="r-progress">Progress</label><select id="r-progress" name="progress">{PROGRESS.map(([v, l]) => <option value={v} selected={v === editing.progress}>{l}</option>)}</select></div>
+    </div>
+    <div class="row">
+      <div class="field"><label for="r-start">Started</label><input id="r-start" type="date" name="started_on" value={editing.started_on ?? ""} /></div>
+      <div class="field"><label for="r-end">Finished</label><input id="r-end" type="date" name="finished_on" value={editing.finished_on ?? ""} /></div>
+      <div class="field"><label for="r-url">Link</label><input id="r-url" type="url" name="url" value={editing.url} placeholder="https://…" /></div>
+      <div class="field">
+        <label for="r-nb">Notebook</label>
+        <select id="r-nb" name="notebook_id"><option value="">None</option>{notebooks.map((n) => <option value={n.id} selected={n.id === editing.notebook_id}>{n.title}</option>)}</select>
+      </div>
+    </div>
+    <div class="field"><label for="r-notes">Notes</label><textarea id="r-notes" name="notes" rows="2" placeholder="Why it matters, what's next…">{editing.notes}</textarea></div>
+    <label class="check"><input type="checkbox" name="published" checked={editing.id ? editing.status === "published" : true} /> Published</label>
+    <div class="row" style="margin-top:1rem">
+      <button class="btn btn-primary">{editing.id ? "Save" : "Add"}</button>
+      {editing.id && <a class="btn btn-ghost" href={`${base}/roadmap`}>Cancel</a>}
+    </div>
+  </form>
+
+  {
+    items.length > 0 && (
+      <div class="panel table-scroll">
+        <table class="table">
+          <thead><tr><th>Item</th><th>Progress</th><th>Dates</th><th></th></tr></thead>
+          <tbody>
+            {items.map((r, i) => (
+              <tr>
+                <td>
+                  <b>{r.title}</b> {r.status === "draft" && <span class="badge badge-draft">Draft</span>}
+                  <div class="muted small">{r.kind}</div>
+                </td>
+                <td><span class:list={["badge", { "badge-progress": r.progress === "in_progress", "badge-done": r.progress === "done" }]}>{progressLabel[r.progress]}</span></td>
+                <td class="small muted">{[fmtDate(r.started_on), fmtDate(r.finished_on)].filter(Boolean).join(" → ")}</td>
+                <td>
+                  <div class="row" style="gap:0.25rem;flex-wrap:nowrap">
+                    <form method="post" class="row" style="gap:0.1rem;flex-wrap:nowrap">
+                      <input type="hidden" name="action" value="move" /><input type="hidden" name="id" value={r.id} />
+                      <button class="btn btn-sm btn-ghost" name="dir" value="up" disabled={i === 0} aria-label="Move up">↑</button>
+                      <button class="btn btn-sm btn-ghost" name="dir" value="down" disabled={i === items.length - 1} aria-label="Move down">↓</button>
+                    </form>
+                    <a class="btn btn-sm" href={`${base}/roadmap?edit=${r.id}`}>Edit</a>
+                    <form method="post" onsubmit="return confirm('Delete this item?')">
+                      <input type="hidden" name="action" value="delete" /><input type="hidden" name="id" value={r.id} />
+                      <button class="btn btn-sm btn-danger">Delete</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )
+  }
+</Admin>

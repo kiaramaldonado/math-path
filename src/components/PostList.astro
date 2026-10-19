@@ -1,0 +1,53 @@
+---
+import { listPosts } from "../lib/db";
+import { fmtDate } from "../lib/format";
+import Draft from "./Draft.astro";
+
+interface Props {
+  kind: "blog" | "project";
+  limit?: number;
+}
+const { kind, limit } = Astro.props;
+const posts = await listPosts(Astro.locals.runtime.env.DB, kind, Astro.locals.isAdmin, limit);
+const base = kind === "blog" ? "/blog" : "/projects";
+---
+
+{
+  posts.length === 0 ? (
+    <p class="empty">Nothing published yet.</p>
+  ) : kind === "blog" ? (
+    <ul class="list">
+      {posts.map((p) => (
+        <li>
+          <a href={`${base}/${p.slug}`} class="post-row">
+            <span class="title">{p.title}</span>
+            <span class="muted small">{fmtDate(p.published_at ?? p.updated_at)}</span>
+          </a>
+          <Draft status={p.status} />
+          {p.summary && <p class="muted small summary">{p.summary}</p>}
+        </li>
+      ))}
+    </ul>
+  ) : (
+    <div class="grid">
+      {posts.map((p) => (
+        <a class="card project" href={`${base}/${p.slug}`}>
+          {p.cover_key && <img src={`/files/${p.cover_key}`} alt="" loading="lazy" />}
+          <h3>{p.title}<Draft status={p.status} /></h3>
+          {p.summary && <p>{p.summary}</p>}
+          {p.tags && <p class="tags">{p.tags.split(",").map((t) => <span class="badge">{t.trim()}</span>)}</p>}
+        </a>
+      ))}
+    </div>
+  )
+}
+
+<style>
+  .post-row { display: flex; justify-content: space-between; gap: 1rem; align-items: baseline; color: var(--color-text); }
+  .post-row .title { font: 600 1.15rem var(--font-heading); }
+  .post-row:hover .title { color: var(--color-primary); }
+  .post-row:hover { text-decoration: none; }
+  .summary { margin: 0.2rem 0 0; }
+  .project img { width: calc(100% + 2.5rem); max-width: none; margin: -1.25rem -1.25rem 1rem; aspect-ratio: 16 / 9; object-fit: cover; border-radius: var(--radius-lg) var(--radius-lg) 0 0; }
+  .tags { display: flex; gap: 0.3rem; flex-wrap: wrap; margin-top: 0.75rem !important; }
+</style>

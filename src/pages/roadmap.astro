@@ -1,0 +1,71 @@
+---
+import Draft from "../components/Draft.astro";
+import Base from "../layouts/Base.astro";
+import { listNotebooks, listRoadmap } from "../lib/db";
+import { fmtDate } from "../lib/format";
+
+const db = Astro.locals.runtime.env.DB;
+const drafts = Astro.locals.isAdmin;
+const [items, notebooks] = await Promise.all([listRoadmap(db, drafts), listNotebooks(db, drafts)]);
+const notebookById = new Map(notebooks.map((n) => [n.id, n]));
+const groups = [
+  ["in_progress", "Now", "What I'm working through at the moment."],
+  ["planned", "Next", "On the list."],
+  ["done", "Done", "Finished — the ground I've covered."],
+] as const;
+const icon = { course: "🎓", book: "📖", topic: "∑", milestone: "★" };
+---
+
+<Base title="Roadmap" section="roadmap" description="Where I am on my path learning maths, and where I'm heading.">
+  <div class="page-head">
+    <p class="eyebrow">Roadmap</p>
+    <h1>The path so far</h1>
+    <p>Courses, books and topics: what I'm studying now, what's next and what's done.</p>
+  </div>
+  {items.length === 0 && <p class="empty">The roadmap is still being drawn.</p>}
+  {
+    groups.map(([key, title, blurb]) => {
+      const list = items.filter((r) => r.progress === key);
+      return (
+        list.length > 0 && (
+          <section class="phase">
+            <h2>{title}</h2>
+            <p class="muted small">{blurb}</p>
+            <ol class="timeline">
+              {list.map((r) => {
+                const nb = r.notebook_id ? notebookById.get(r.notebook_id) : undefined;
+                const dates = [fmtDate(r.started_on), fmtDate(r.finished_on)].filter(Boolean).join(" → ");
+                return (
+                  <li class:list={["item", key]}>
+                    <span class="icon" aria-hidden="true">{icon[r.kind]}</span>
+                    <div>
+                      <p class="item-title">
+                        {r.url ? <a href={r.url} target="_blank" rel="noopener noreferrer">{r.title}</a> : r.title}
+                        <Draft status={r.status} edit={`/roadmap?edit=${r.id}`} />
+                      </p>
+                      <p class="muted small">{r.kind[0].toUpperCase() + r.kind.slice(1)}{dates && ` · ${dates}`}{nb && <> · <a href={`/notebooks/${nb.slug}`}>notes</a></>}</p>
+                      {r.notes && <p class="notes">{r.notes}</p>}
+                    </div>
+                  </li>
+                );
+              })}
+            </ol>
+          </section>
+        )
+      );
+    })
+  }
+</Base>
+
+<style>
+  .phase { margin-bottom: 2.5rem; max-width: 760px; }
+  .phase h2 { font-size: var(--text-h2); margin-bottom: 0.1rem; }
+  .timeline { list-style: none; padding: 0; margin: 1rem 0 0; border-left: 2px solid var(--color-border); }
+  .item { display: flex; gap: 0.9rem; padding: 0 0 1.25rem 0; margin-left: -13px; }
+  .icon { flex: none; width: 24px; height: 24px; border-radius: 50%; background: var(--color-bg-card); border: 2px solid var(--color-border-strong); display: grid; place-items: center; font-size: 0.7rem; }
+  .in_progress .icon { border-color: var(--color-primary); }
+  .done .icon { border-color: var(--color-success); }
+  .item-title { font-weight: 600; margin: 0; }
+  .item p { margin: 0; }
+  .notes { margin-top: 0.3rem !important; font-size: 0.92rem; white-space: pre-line; }
+</style>

@@ -1,0 +1,9 @@
+---
+import PostPage from "../../components/PostPage.astro";
+import { getPost } from "../../lib/db";
+
+const post = await getPost(Astro.locals.runtime.env.DB, { kind: "project", slug: Astro.params.slug }, Astro.locals.isAdmin);
+if (!post) return Astro.rewrite("/404");
+---
+
+<PostPage post={post} />

@@ -1,0 +1,50 @@
+---
+import Draft from "../components/Draft.astro";
+import Base from "../layouts/Base.astro";
+import { listCertificates, listNotebooks } from "../lib/db";
+import { fmtDate } from "../lib/format";
+
+const db = Astro.locals.runtime.env.DB;
+const drafts = Astro.locals.isAdmin;
+const [certificates, notebooks] = await Promise.all([listCertificates(db, drafts), listNotebooks(db, drafts)]);
+const notebookById = new Map(notebooks.map((n) => [n.id, n]));
+---
+
+<Base title="Certificates" section="certificates" description="Courses I've completed on my path learning maths.">
+  <div class="page-head">
+    <p class="eyebrow">Certificates</p>
+    <h1>Courses completed</h1>
+    <p>Proof of the courses I've finished along the way.</p>
+  </div>
+  {
+    certificates.length ? (
+      <div class="grid">
+        {certificates.map((c) => {
+          const nb = c.notebook_id ? notebookById.get(c.notebook_id) : undefined;
+          const isImage = c.file_key && !c.file_key.endsWith(".pdf");
+          return (
+            <div class="card cert">
+              {isImage && <a href={`/files/${c.file_key}`}><img src={`/files/${c.file_key}`} alt={`Certificate: ${c.title}`} loading="lazy" /></a>}
+              <p class="eyebrow">{c.issuer}</p>
+              <h3>{c.title}<Draft status={c.status} edit={`/certificates?edit=${c.id}`} /></h3>
+              {c.issued_on && <p>{fmtDate(c.issued_on)}</p>}
+              <p class="row actions">
+                {c.file_key && <a class="btn btn-sm" href={`/files/${c.file_key}`} target="_blank" rel="noopener">{isImage ? "View" : "View PDF"}</a>}
+                {c.url && <a class="btn btn-sm btn-ghost" href={c.url} target="_blank" rel="noopener noreferrer">Verify ↗</a>}
+                {nb && <a class="btn btn-sm btn-ghost" href={`/notebooks/${nb.slug}`}>My notes</a>}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+    ) : (
+      <p class="empty">No certificates yet — working on it.</p>
+    )
+  }
+</Base>
+
+<style>
+  .cert img { width: calc(100% + 2.5rem); max-width: none; margin: -1.25rem -1.25rem 1rem; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--radius-lg) var(--radius-lg) 0 0; border-bottom: 1px solid var(--color-border); }
+  .cert .eyebrow { margin-bottom: 0.25rem; }
+  .actions { gap: 0.4rem; margin-top: 0.9rem !important; }
+</style>

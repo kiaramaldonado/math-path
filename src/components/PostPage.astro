@@ -1,0 +1,40 @@
+---
+import Base from "../layouts/Base.astro";
+import type { Post } from "../lib/types";
+import { fmtDate } from "../lib/format";
+import { docText, renderDoc } from "../lib/render";
+import Draft from "./Draft.astro";
+
+interface Props {
+  post: Post;
+}
+const { post } = Astro.props;
+const kind = post.kind;
+const links: { label: string; url: string }[] = JSON.parse(post.links_json || "[]");
+const tags = post.tags.split(",").map((t) => t.trim()).filter(Boolean);
+const section = kind === "blog" ? "blog" : "projects";
+---
+
+<Base title={post.title} section={section} description={post.summary || docText(post.content_json, 160)}>
+  <article class="post">
+    <p class="eyebrow"><a href={`/${section}`}>{kind === "blog" ? "Blog" : "Projects"}</a>{post.published_at && ` · ${fmtDate(post.published_at)}`}</p>
+    <h1>{post.title}<Draft status={post.status} edit={`/posts/${post.id}`} /></h1>
+    {post.summary && <p class="lede">{post.summary}</p>}
+    {(tags.length > 0 || links.length > 0) && (
+      <div class="row post-meta">
+        {tags.map((t) => <span class="badge">{t}</span>)}
+        {links.map((l) => <a class="btn btn-sm" href={l.url} target="_blank" rel="noopener noreferrer">{l.label} ↗</a>)}
+      </div>
+    )}
+    {post.cover_key && <img class="cover" src={`/files/${post.cover_key}`} alt="" />}
+    <div class="prose" set:html={renderDoc(post.content_json)} />
+  </article>
+</Base>
+
+<style>
+  .post { max-width: 72ch; }
+  .post h1 { font-size: var(--text-h1); }
+  .lede { font-size: 1.15rem; color: var(--color-text-muted); }
+  .post-meta { gap: 0.4rem; margin: 1rem 0 1.5rem; }
+  .cover { width: 100%; border-radius: var(--radius-lg); margin-bottom: 2rem; border: 1px solid var(--color-border); }
+</style>

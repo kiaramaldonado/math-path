@@ -1,0 +1,76 @@
+---
+import Admin from "../../../layouts/Admin.astro";
+import { getPost } from "../../../lib/db";
+
+const post = await getPost(Astro.locals.runtime.env.DB, { id: Number(Astro.params.id) }, true);
+if (!post) return Astro.rewrite("/404");
+const links: { label: string; url: string }[] = JSON.parse(post.links_json || "[]");
+while (links.length < 3) links.push({ label: "", url: "" });
+const publicHref = `/${post.kind === "blog" ? "blog" : "projects"}/${post.slug}`;
+const data = JSON.stringify({ id: post.id, content: JSON.parse(post.content_json), cover: post.cover_key });
+---
+
+<Admin title={post.title} active={post.kind} workspace>
+  <div class="post-edit" id="post-edit">
+    <form class="post-meta" id="post-meta">
+      <div class="post-meta-head">
+        <a href={`${Astro.locals.adminBase}/posts?kind=${post.kind}`} class="ws-back" aria-label="Back">‹</a>
+        <span class="eyebrow" style="margin:0">{post.kind === "blog" ? "Blog post" : "Project"}</span>
+        <span style="flex:1"></span>
+        <span class="ws-save" aria-live="polite"></span>
+        <a class="btn btn-sm btn-ghost" href={publicHref} target="_blank" rel="noopener">View ↗</a>
+      </div>
+      <input class="ws-title" name="title" value={post.title} aria-label="Title" maxlength="160" required />
+      <div class="field"><label for="summary">Summary</label><textarea id="summary" name="summary" rows="2" maxlength="500" placeholder="One or two sentences shown in lists and previews">{post.summary}</textarea></div>
+      <div class="row">
+        <div class="field"><label for="tags">Tags</label><input id="tags" name="tags" value={post.tags} placeholder="calculus, python" /></div>
+        <div class="field"><label for="slug">URL name</label><input id="slug" name="slug" value={post.slug} /></div>
+      </div>
+      {
+        post.kind === "project" && (
+          <fieldset class="links">
+            <legend class="label">Links (code, demo, paper…)</legend>
+            {links.map((l) => (
+              <div class="row">
+                <input name="link_label" value={l.label} placeholder="Label, e.g. GitHub" aria-label="Link label" />
+                <input name="link_url" type="url" value={l.url} placeholder="https://…" aria-label="Link URL" />
+              </div>
+            ))}
+          </fieldset>
+        )
+      }
+      <div class="row cover-row">
+        <div class="cover">{post.cover_key ? <img src={`/files/${post.cover_key}`} alt="" /> : <span class="muted small">No cover image</span>}</div>
+        <label class="btn btn-sm">Choose cover…<input type="file" accept="image/*" class="cover-input" hidden /></label>
+        {post.cover_key && <button type="button" class="btn btn-sm btn-ghost cover-remove">Remove</button>}
+      </div>
+      <div class="row">
+        <label class="check"><input type="checkbox" name="published" checked={post.status === "published"} /> Published</label>
+        <span style="flex:1"></span>
+        <button type="button" class="btn btn-sm btn-danger post-delete">Delete</button>
+        <button class="btn btn-primary">Save details</button>
+      </div>
+    </form>
+    <div class="ws-toolbar" role="toolbar" aria-label="Formatting"></div>
+    <div class="ws-editor-wrap"><div class="ws-editor"></div></div>
+  </div>
+  <script type="application/json" id="post-data" set:html={data.replace(/</g, "\\u003c")} />
+</Admin>
+
+<script>
+  import "../../../styles/editor.css";
+  import { initPostEditor } from "../../../editor/post-editor";
+  initPostEditor(document.getElementById("post-edit")!, JSON.parse(document.getElementById("post-data")!.textContent!));
+</script>
+
+<style>
+  .post-edit { height: calc(100dvh - 52px); overflow-y: auto; }
+  .post-meta { max-width: 900px; margin: 0 auto; padding: 1rem 1.25rem 0.5rem; }
+  .post-meta-head { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem; }
+  .post-meta .ws-title { width: 100%; margin-bottom: 0.75rem; }
+  .links { border: 0; padding: 0; margin: 0 0 1rem; }
+  .links .row { flex-wrap: nowrap; margin-bottom: 0.4rem; }
+  .cover-row { margin-bottom: 1rem; }
+  .cover { width: 120px; height: 68px; border: 1px dashed var(--color-border-strong); border-radius: var(--radius-md); display: grid; place-items: center; overflow: hidden; background: var(--color-bg-card); }
+  .cover img { width: 100%; height: 100%; object-fit: cover; }
+</style>

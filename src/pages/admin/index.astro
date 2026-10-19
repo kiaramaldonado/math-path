@@ -1,4 +1,56 @@
 ---
 import Admin from "../../layouts/Admin.astro";
+import { recentPages } from "../../lib/db";
+import { fmtDate } from "../../lib/format";
+
+const db = Astro.locals.runtime.env.DB;
+const base = Astro.locals.adminBase;
+const counts = await db
+  .prepare(
+    `SELECT (SELECT COUNT(*) FROM notebooks) AS notebooks, (SELECT COUNT(*) FROM pages) AS pages,
+            (SELECT COUNT(*) FROM posts WHERE kind = 'blog') AS blog, (SELECT COUNT(*) FROM posts WHERE kind = 'project') AS projects,
+            (SELECT COUNT(*) FROM certificates) AS certificates, (SELECT COUNT(*) FROM roadmap_items) AS roadmap,
+            (SELECT COUNT(*) FROM pages WHERE status = 'draft') AS draft_pages`,
+  )
+  .first<Record<string, number>>();
+const recent = await recentPages(db, 8, true);
+const stats = [
+  ["Notebooks", counts?.notebooks, `${base}/notebooks`],
+  ["Pages", counts?.pages, `${base}/notebooks`],
+  ["Blog posts", counts?.blog, `${base}/posts?kind=blog`],
+  ["Projects", counts?.projects, `${base}/posts?kind=project`],
+  ["Certificates", counts?.certificates, `${base}/certificates`],
+  ["Roadmap items", counts?.roadmap, `${base}/roadmap`],
+] as const;
 ---
-<Admin title="Dashboard" active="home"><h1>Dashboard</h1></Admin>
+
+<Admin title="Dashboard" active="home">
+  <div class="admin-head">
+    <h1>Hi Kiara 👋</h1>
+    <a class="btn btn-primary" href={`${base}/notebooks`}>Open notebooks</a>
+  </div>
+  <div class="stats">
+    {stats.map(([label, n, href]) => <a class="stat" href={href}><b>{n ?? 0}</b><span>{label}</span></a>)}
+  </div>
+  <section class="panel">
+    <h2>Continue where you left off</h2>
+    {
+      recent.length ? (
+        <ul class="list">
+          {recent.map((p) => (
+            <li class="row" style="justify-content:space-between">
+              <span>
+                <a href={`${base}/notebooks/${p.notebook_id}?page=${p.id}`}><b>{p.title}</b></a> <span class="muted small">· {p.notebook_title} › {p.section_title}</span>
+                {p.status === "draft" && <span class="badge badge-draft">Draft</span>}
+              </span>
+              <span class="muted small">{fmtDate(p.updated_at)}</span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p class="muted">No pages yet. Create a notebook to start writing.</p>
+      )
+    }
+    {counts?.draft_pages ? <p class="small muted" style="margin-top:1rem">{counts.draft_pages} page(s) still in draft.</p> : null}
+  </section>
+</Admin>

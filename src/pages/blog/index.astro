@@ -1,0 +1,13 @@
+---
+import PostList from "../../components/PostList.astro";
+import Base from "../../layouts/Base.astro";
+---
+
+<Base title="Blog" section="blog" description="Writing about learning maths: what clicked, what didn't, and what I'm reading.">
+  <div class="page-head">
+    <p class="eyebrow">Blog</p>
+    <h1>Thinking out loud</h1>
+    <p>Longer pieces about what I'm learning, how I'm learning it, and what I'm reading.</p>
+  </div>
+  <PostList kind="blog" />
+</Base>
