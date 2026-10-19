@@ -1,0 +1,30 @@
+---
+import Admin from "../../layouts/Admin.astro";
+import { SESSION_COOKIE, countSessions, deleteAllSessions } from "../../lib/auth";
+
+const db = Astro.locals.runtime.env.DB;
+if (Astro.request.method === "POST") {
+  await deleteAllSessions(db);
+  Astro.cookies.delete(SESSION_COOKIE, { path: "/" });
+  return Astro.redirect("/", 303);
+}
+const sessions = await countSessions(db);
+---
+
+<Admin title="Settings" active="settings">
+  <div class="admin-head"><h1>Settings</h1></div>
+  <section class="panel">
+    <h2>Devices</h2>
+    <p class="muted">You're signed in on <b>{sessions}</b> {sessions === 1 ? "device" : "devices"}. Sessions last 30 days after last use.</p>
+    <form method="post" onsubmit="return confirm('Sign out everywhere, including this device?')">
+      <button class="btn btn-danger">Log out of all devices</button>
+    </form>
+  </section>
+  <section class="panel">
+    <h2>Changing your password or authenticator</h2>
+    <p class="muted small">
+      Run <code>npm run setup-admin</code> on your computer and store the new values with <code>wrangler secret put</code>.
+      The secret admin URL changes too, so update your bookmarks.
+    </p>
+  </section>
+</Admin>

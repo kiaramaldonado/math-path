@@ -1,0 +1,54 @@
+---
+import "../styles/global.css";
+import "../styles/content.css";
+import "../styles/admin.css";
+
+interface Props {
+  title: string;
+  active?: "home" | "notebooks" | "blog" | "project" | "certificates" | "roadmap" | "settings";
+  /** Full-height workspace without the page padding (editor screens). */
+  workspace?: boolean;
+}
+const { title, active, workspace = false } = Astro.props;
+const base = Astro.locals.adminBase;
+const links = [
+  ["home", "Dashboard", base],
+  ["notebooks", "Notebooks", `${base}/notebooks`],
+  ["blog", "Blog", `${base}/posts?kind=blog`],
+  ["project", "Projects", `${base}/posts?kind=project`],
+  ["certificates", "Certificates", `${base}/certificates`],
+  ["roadmap", "Roadmap", `${base}/roadmap`],
+  ["settings", "Settings", `${base}/settings`],
+] as const;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="referrer" content="no-referrer" />
+    <title>{title} · Admin</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  </head>
+  <body class:list={["admin", { workspace }]} data-admin-base={base}>
+    {
+      base && (
+        <header class="admin-bar">
+          <a href={base} class="admin-brand">∫ <span>Admin</span></a>
+          <nav aria-label="Admin">
+            {links.map(([key, label, href]) => <a href={href} aria-current={active === key ? "page" : undefined}>{label}</a>)}
+          </nav>
+          <div class="admin-actions">
+            <a href="/" class="btn btn-sm btn-ghost" target="_blank" rel="noopener">View site ↗</a>
+            <form method="post" action={`${base}/logout`}>
+              <button class="btn btn-sm">Log out</button>
+            </form>
+          </div>
+        </header>
+      )
+    }
+    <main class="admin-main"><slot /></main>
+  </body>
+</html>

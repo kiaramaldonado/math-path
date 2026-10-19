@@ -1,0 +1,94 @@
+/* Rendered note/post content. Used by public pages AND the editor, so they look the same. */
+@import 'katex/dist/katex.min.css';
+
+.prose {
+  font-size: 1.04rem;
+  line-height: 1.75;
+  max-width: 72ch;
+  overflow-wrap: break-word;
+}
+.prose > :first-child { margin-top: 0; }
+.prose h2 { font-size: 1.6rem; margin: 2rem 0 0.6rem; }
+.prose h3 { font-size: 1.25rem; margin: 1.6rem 0 0.5rem; }
+.prose h4, .prose h5 { font-size: 1.05rem; margin: 1.3rem 0 0.4rem; }
+.prose p { margin: 0 0 0.9em; }
+.prose ul, .prose ol { padding-left: 1.5em; margin: 0 0 1em; }
+.prose li > p { margin: 0 0 0.25em; }
+.prose blockquote {
+  margin: 1.2em 0;
+  padding: 0.2em 1em;
+  border-left: 3px solid var(--color-border-strong);
+  color: var(--color-text-muted);
+}
+.prose code {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  background: var(--color-bg-muted);
+  padding: 0.1em 0.35em;
+  border-radius: var(--radius-sm);
+}
+.prose pre {
+  background: var(--color-ink-950);
+  color: #f2f1ee;
+  padding: 1em 1.2em;
+  border-radius: var(--radius-md);
+  overflow-x: auto;
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+.prose pre code { background: none; padding: 0; color: inherit; }
+.prose hr { border: 0; border-top: 1px solid var(--color-border); margin: 2em 0; }
+.prose mark { background: #fff1a8; color: inherit; padding: 0 0.1em; border-radius: 2px; }
+.prose a { text-decoration: underline; text-decoration-color: var(--color-primary-300); text-underline-offset: 2px; }
+
+.prose .task-list { list-style: none; padding-left: 0.2em; }
+.prose .task-list li { display: flex; gap: 0.55em; align-items: flex-start; }
+.prose .task-list li > label { flex: none; margin-top: 0.3em; }
+.prose .task-list li > input { margin-top: 0.45em; }
+.prose .task-list li > div { flex: 1; }
+.prose .task-item.done > div, .prose li[data-checked="true"] > div { color: var(--color-text-muted); text-decoration: line-through; }
+
+.prose .table-wrap, .prose .tableWrapper { overflow-x: auto; margin: 1.2em 0; }
+.prose table { border-collapse: collapse; min-width: 50%; font-size: 0.95rem; }
+.prose th, .prose td { border: 1px solid var(--color-border-strong); padding: 0.4em 0.7em; vertical-align: top; text-align: left; }
+.prose th { background: var(--color-bg-muted); font-weight: 600; }
+.prose td > p, .prose th > p { margin: 0; }
+
+/* Math */
+.prose .math-block { margin: 1em 0; overflow-x: auto; overflow-y: hidden; padding: 0.2em 0; }
+.prose .katex { font-size: 1.08em; }
+.prose .math-block .katex-display { margin: 0; }
+
+/* Figures: images, drawings, embeds */
+.prose .figure { margin: 1.4em auto; }
+.prose .figure img { display: block; width: 100%; border-radius: var(--radius-md); }
+.prose .drawing img { background: var(--color-white); border: 1px solid var(--color-border); }
+.prose figcaption { text-align: center; font-size: 0.85rem; color: var(--color-text-muted); margin-top: 0.4em; }
+.prose .embed { margin: 1.4em 0; }
+.prose .embed iframe { width: 100%; aspect-ratio: 16 / 10; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-white); }
+
+/* Callouts: Definition / Theorem / Proof … */
+.prose .callout {
+  margin: 1.3em 0;
+  padding: 0.8em 1.1em;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  border-left: 4px solid var(--callout, var(--color-ink-400));
+  background: var(--callout-bg, var(--color-bg-card));
+}
+.prose .callout > :last-child { margin-bottom: 0; }
+.prose .callout-title {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--callout, var(--color-text));
+  margin-bottom: 0.3em;
+}
+.prose .callout-title span { font-weight: 400; color: var(--color-text-muted); }
+.prose .callout-definition { --callout: #1e3a5f; --callout-bg: #f3f5f8; }
+.prose .callout-theorem    { --callout: #5b3a8a; --callout-bg: #f6f3fa; }
+.prose .callout-lemma      { --callout: #6b4f8a; --callout-bg: #f7f5fa; }
+.prose .callout-proof      { --callout: #5c5a56; --callout-bg: #ffffff; }
+.prose .callout-proof > :last-child::after { content: " ∎"; float: right; }
+.prose .callout-example    { --callout: #2f6b45; --callout-bg: #f2f8f4; }
+.prose .callout-note       { --callout: #8f8c86; --callout-bg: #fafaf8; }
+.prose .callout-warning    { --callout: #8a5a00; --callout-bg: #fdf7e8; }

@@ -1,0 +1,59 @@
+---
+import Admin from "../../layouts/Admin.astro";
+import { SESSION_COOKIE, clearFailedLogins, createSession, isLockedOut, recordFailedLogin } from "../../lib/auth";
+import { normalizeAdminPath } from "../../lib/guard";
+import { verifyPassword } from "../../lib/password";
+import { verifyTotp } from "../../lib/totp";
+
+const env = Astro.locals.runtime.env;
+let error = "";
+
+if (Astro.request.method === "POST") {
+  const ip = Astro.request.headers.get("CF-Connecting-IP") ?? "local";
+  if (await isLockedOut(env.DB, ip)) {
+    error = "Too many attempts. Try again in 15 minutes.";
+  } else {
+    const form = await Astro.request.formData();
+    const password = String(form.get("password") ?? "");
+    const code = String(form.get("code") ?? "");
+    // Check both before deciding so timing doesn't reveal which one was wrong.
+    const [okPassword, okCode] = await Promise.all([
+      verifyPassword(password, env.ADMIN_PASSWORD_HASH ?? ""),
+      verifyTotp(env.TOTP_SECRET ?? "", code),
+    ]);
+    if (okPassword && okCode) {
+      await clearFailedLogins(env.DB, ip);
+      const { token, expires } = await createSession(env.DB, Astro.request.headers.get("User-Agent") ?? "");
+      Astro.cookies.set(SESSION_COOKIE, token, {
+        httpOnly: true,
+        secure: Astro.url.protocol === "https:",
+        sameSite: "strict",
+        path: "/",
+        expires,
+      });
+      return Astro.redirect(normalizeAdminPath(env.ADMIN_PATH), 303);
+    }
+    await recordFailedLogin(env.DB, ip);
+    error = "Wrong password or code.";
+  }
+}
+---
+
+<Admin title="Sign in">
+  <div class="login">
+    <form method="post" class="panel">
+      <h1>Welcome back</h1>
+      <p class="muted small">Password and the 6-digit code from your authenticator app.</p>
+      <div class="field">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required autofocus />
+      </div>
+      <div class="field">
+        <label for="code">Authenticator code</label>
+        <input id="code" name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9 ]{6,7}" maxlength="7" required />
+      </div>
+      {error && <p class="error" role="alert">{error}</p>}
+      <button class="btn btn-primary" style="width:100%">Sign in</button>
+    </form>
+  </div>
+</Admin>
