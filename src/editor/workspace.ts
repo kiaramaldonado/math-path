@@ -2,7 +2,7 @@
 import type { Editor, JSONContent } from "@tiptap/core";
 import type { Notebook, Page, SectionWithPages } from "../lib/types";
 import { mountEditor } from "./editor";
-import { api, h, menu, popover, toast } from "./ui";
+import { api, AUTOSAVE_DELAY, h, menu, popover, toast } from "./ui";
 
 interface State {
   notebook: Notebook;
@@ -71,7 +71,7 @@ export function initWorkspace(root: HTMLElement, initial: State) {
       /* storage full or blocked: the server save still runs */
     }
     clearTimeout(saveTimer);
-    saveTimer = window.setTimeout(flush, 1200);
+    saveTimer = window.setTimeout(flush, AUTOSAVE_DELAY);
   };
 
   window.addEventListener("beforeunload", (e) => {

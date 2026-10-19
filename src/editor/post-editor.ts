@@ -1,6 +1,6 @@
 import type { JSONContent } from "@tiptap/core";
 import { mountEditor } from "./editor";
-import { api, toast, uploadFile } from "./ui";
+import { api, AUTOSAVE_DELAY, toast, uploadFile } from "./ui";
 
 interface Data {
   id: number;
@@ -45,10 +45,11 @@ export function initPostEditor(root: HTMLElement, data: Data) {
       pending = doc;
       setSave("Unsaved");
       clearTimeout(timer);
-      timer = window.setTimeout(flush, 1200);
+      timer = window.setTimeout(flush, AUTOSAVE_DELAY);
     },
   });
   window.addEventListener("beforeunload", (e) => pending && (flush(), e.preventDefault()));
+  document.addEventListener("visibilitychange", () => document.visibilityState === "hidden" && flush());
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();

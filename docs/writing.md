@@ -33,7 +33,8 @@ with a yellow "Draft" badge and an "Edit" link.
 
 ## The editor
 
-Pages save automatically a second or two after you stop typing ("Saved" appears at the top).
+Pages and posts save automatically 5 seconds after you stop typing ("Saved" appears at the top), and
+immediately when you open another page, switch tabs or apps, or close the browser.
 If the connection drops, your changes are kept on the device and you're offered to restore them.
 
 ### Inserting things
