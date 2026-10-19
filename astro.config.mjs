@@ -10,4 +10,5 @@ export default defineConfig({
     imageService: "passthrough",
   }),
   security: { checkOrigin: true },
+  devToolbar: { enabled: false },
 });
