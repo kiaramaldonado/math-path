@@ -1,0 +1,25 @@
+name: Bug report
+description: Something on the site or in the code doesn't work as expected.
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: input
+    id: where
+    attributes:
+      label: Page or file
+      placeholder: e.g. /notebooks/linear-algebra or src/lib/render.ts
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and device
+      placeholder: e.g. Safari on iPad, Chrome 140 on Windows
+  - type: textarea
+    id: extra
+    attributes:
+      label: Screenshots or anything else
