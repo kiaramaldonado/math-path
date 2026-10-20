@@ -2,6 +2,7 @@
 import { type Editor, InputRule, mergeAttributes, Node, PasteRule } from "@tiptap/core";
 import Image from "@tiptap/extension-image";
 import katex from "katex";
+import { visibleSpaces } from "../lib/latex";
 import { CALLOUT_KINDS } from "../lib/render";
 import { editMath } from "./math-popover";
 import { editDrawing } from "./drawing-modal";
@@ -20,7 +21,7 @@ declare module "@tiptap/core" {
 
 function renderKatex(el: HTMLElement, latex: string, display: boolean) {
   try {
-    katex.render(latex || "\\square", el, { displayMode: display, throwOnError: false, strict: "ignore" });
+    katex.render(visibleSpaces(latex) || "\\square", el, { displayMode: display, throwOnError: false, strict: "ignore" });
   } catch {
     el.textContent = latex;
   }

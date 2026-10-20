@@ -2,6 +2,7 @@
 // Every node/mark the editor can produce must be handled here, otherwise it
 // silently disappears from the public site. Unknown nodes render their children.
 import katex from "katex";
+import { visibleSpaces } from "./latex";
 
 export interface JMark {
   type: string;
@@ -67,7 +68,7 @@ export function safeEmbed(raw: unknown): string | null {
 }
 
 export function renderMath(latex: string, displayMode: boolean): string {
-  return katex.renderToString(latex || "\\square", {
+  return katex.renderToString(visibleSpaces(latex) || "\\square", {
     displayMode,
     throwOnError: false,
     strict: "ignore",

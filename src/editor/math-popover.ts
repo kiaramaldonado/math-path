@@ -1,4 +1,5 @@
 import katex from "katex";
+import { visibleSpaces } from "../lib/latex";
 import { h, popover } from "./ui";
 
 // Snippets: "{}" marks where the cursor lands.
@@ -7,9 +8,9 @@ const GROUPS: [string, [string, string][]][] = [
     ["a/b", "\\frac{}{}"], ["√", "\\sqrt{}"], ["ⁿ√", "\\sqrt[]{}"], ["xⁿ", "^{}"], ["xᵢ", "_{}"],
     ["( )", "\\left( {} \\right)"], ["|x|", "\\left| {} \\right|"], ["vec", "\\vec{}"], ["x̂", "\\hat{}"], ["x̄", "\\overline{}"],
   ]],
-  // LaTeX ignores spaces and treats { } as invisible grouping, so offer the explicit forms.
+  // Plain spaces show (see visibleSpaces); { } are still invisible grouping, so offer the explicit forms.
   ["Spacing & text", [
-    ["space", "\\ "], ["wide", "\\quad "], ["wider", "\\qquad "], ["thin", "\\, "],
+    ["wide", "\\quad "], ["wider", "\\qquad "], ["thin", "\\, "],
     ["text", "\\text{}"], ["{ }", "\\{ {} \\}"], ["⟨ ⟩", "\\langle {} \\rangle"], ["new line", " \\\\ "],
   ]],
   ["Calculus", [
@@ -47,11 +48,9 @@ export function editMath(anchor: HTMLElement | DOMRect, latex: string, display: 
   const hint = h(
     "p",
     { class: "math-hint" },
-    "Spaces and { } don't show in formulas. Use ",
-    h("code", {}, "\\ "),
-    " or ",
+    "Spaces show as you type them. For a wider gap use ",
     h("code", {}, "\\quad"),
-    " for space, ",
+    "; ",
     h("code", {}, "\\text{…}"),
     " for words and ",
     h("code", {}, "\\{ \\}"),
@@ -59,7 +58,7 @@ export function editMath(anchor: HTMLElement | DOMRect, latex: string, display: 
   );
   const paint = () => {
     try {
-      katex.render(input.value || "\\square", preview, { displayMode: true, throwOnError: true, strict: "ignore" });
+      katex.render(visibleSpaces(input.value) || "\\square", preview, { displayMode: true, throwOnError: true, strict: "ignore" });
       preview.classList.remove("invalid");
     } catch (e) {
       preview.textContent = (e as Error).message.replace("KaTeX parse error: ", "");
