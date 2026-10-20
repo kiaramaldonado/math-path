@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cleanDrawing, toSvg } from "../src/lib/drawing";
+import { cleanDrawing, contentArea, toSvg } from "../src/lib/drawing";
 import { visibleSpaces } from "../src/lib/latex";
 import { docText, type JMark, type JNode, renderDoc, toEmbedUrl } from "../src/lib/render";
 
@@ -133,6 +133,49 @@ describe("drawings", () => {
     expect(svg).toContain('fill="#ff0000"');
     expect(svg).toContain("<rect x=\"100\" y=\"100\" width=\"100\" height=\"50\"");
     expect(svg).not.toContain("<script");
+  });
+  it("keeps old drawings drawing exactly the same strokes", () => {
+    const old = cleanDrawing({ width: 1000, height: 600, background: "grid", strokes: [{ tool: "line", color: "#161616", size: 4, points: [[0, 0, 0.5], [1000, 600, 0.5]] }] })!;
+    const svg = toSvg(old);
+    expect(svg).toContain('viewBox="0 0 1000 600"'); // touches every edge, so nothing is cropped
+    expect(svg).toContain('<line x1="0" y1="0" x2="1000" y2="600"');
+    expect(svg).not.toContain("<mask");
+  });
+  it("crops the SVG to the drawn area, snapped to the grid", () => {
+    const d = cleanDrawing({ width: 1000, height: 600, background: "grid", strokes: [{ tool: "rect", color: "#000000", size: 2, points: [[310, 210], [520, 330]] }] })!;
+    expect(contentArea(d)).toEqual({ x: 275, y: 175, w: 275, h: 200 });
+    expect(toSvg(d)).toContain('viewBox="275 175 275 200"');
+    // An empty drawing keeps its full size.
+    expect(contentArea({ ...d, strokes: [] })).toEqual({ x: 0, y: 0, w: 1000, h: 600 });
+  });
+  it("cleans and escapes text, and keeps fills and erasers", () => {
+    const d = cleanDrawing({
+      width: 1000,
+      height: 600,
+      background: "blank",
+      strokes: [
+        { tool: "pen", color: "#161616", size: 4, points: [[10, 10], [200, 200]] },
+        { tool: "fill", color: "#2563eb", size: 1, points: [], rings: [[[0, 0], [100, 0], [100, 100]], [[1, 1]]] },
+        { tool: "eraser", color: "#000000", size: 16, points: [[50, 50], [60, 60]] },
+        { tool: "text", color: "#b91c1c", size: 22, points: [[300, 300, 0.5]], text: "a < b & </text><script>\nline 2" },
+        { tool: "text", color: "#b91c1c", size: 22, points: [[300, 300]], text: "   " },
+        { tool: "fill", color: "#2563eb", size: 1, points: [], rings: "nope" },
+      ],
+    })!;
+    expect(d.strokes.map((s) => s.tool)).toEqual(["pen", "fill", "eraser", "text"]);
+    expect(d.strokes[1].rings).toHaveLength(1); // the 1-point ring is dropped
+    const svg = toSvg(d);
+    expect(svg).not.toContain("<script");
+    expect(svg).toContain("a &lt; b &amp; &lt;/text&gt;&lt;script&gt;");
+    expect(svg).toContain("line 2</tspan>");
+    expect(svg).toContain('fill-rule="evenodd"');
+    // The eraser masks what came before it (pen + fill), and the fill sits under the pen.
+    expect(svg).toMatch(/<mask id="e0"[^]*<\/mask><g mask="url\(#e0\)"><path d="M0,0 L100,0 L100,100Z"[^]*<\/g><text/);
+  });
+  it("renders cropped drawings at the canvas scale", () => {
+    const html = renderDoc(doc({ type: "drawing", attrs: { id: "2cf44a2d-79e4-4640-887a-2ba28c5a380a", v: 1, fit: 0.4 } }));
+    expect(html).toContain('loading="lazy" style="width:40%"');
+    expect(renderDoc(doc({ type: "drawing", attrs: { id: "2cf44a2d-79e4-4640-887a-2ba28c5a380a", v: 1 } }))).not.toContain("lazy\" style");
   });
   it("rejects absurd sizes", () => {
     expect(cleanDrawing({ width: 10, height: 10, strokes: [] })).toBeNull();
