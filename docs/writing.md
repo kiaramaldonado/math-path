@@ -72,7 +72,13 @@ Use `\quad` for a wider gap, `\text{…}` for words and `\{ \}` for visible brac
 
 The drawing canvas is full screen:
 
-- Tools: pen **P**, highlighter **H**, line **L**, arrow **A**, rectangle **R**, ellipse **O**, eraser **E**.
+- Tools: move **V**, pen **P**, highlighter **H**, line **L**, arrow **A**, rectangle **R**, ellipse **O**,
+  text **T**, fill **B**, eraser **E**, delete stroke **X**.
+- **Text**: click and type (Enter for a new line, Esc or click away to finish). Click a text to edit it;
+  the colour and size buttons change it while you type.
+- **Move**: drag any text, stroke or shape to a new place.
+- **Eraser** rubs out just the part you drag over; **delete stroke** removes whole strokes (tap a fill to remove it).
+- **Fill**: click inside a closed area to fill it. Click a fill again to change its colour.
 - 12 colours plus a custom colour picker, 4 thicknesses.
 - Background: blank, grid, graph paper or dots. **+ Space** makes the page taller.
 - Undo/redo with `⌘Z` / `⇧⌘Z`.
@@ -80,6 +86,7 @@ The drawing canvas is full screen:
   your finger scrolls instead of drawing (palm rejection).
 
 Click a drawing in a page to change its width or caption, or to edit it again.
+Saved drawings are cropped to the part you drew on, so a small sketch isn't shown on a big blank page.
 
 ### Moving blocks
 
