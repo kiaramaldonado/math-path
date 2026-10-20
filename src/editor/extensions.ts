@@ -3,7 +3,7 @@ import { type Editor, InputRule, mergeAttributes, Node, PasteRule } from "@tipta
 import Image from "@tiptap/extension-image";
 import katex from "katex";
 import { visibleSpaces } from "../lib/latex";
-import { CALLOUT_KINDS } from "../lib/render";
+import { CALLOUT_KINDS, fitWidth } from "../lib/render";
 import { editMath } from "./math-popover";
 import { editDrawing } from "./drawing-modal";
 import { editFigure } from "./figure-popover";
@@ -245,7 +245,7 @@ export const Drawing = Node.create({
   atom: true,
   draggable: true,
   addAttributes() {
-    return { id: { default: null }, v: { default: 0 }, width: { default: 100 }, caption: { default: "" } };
+    return { id: { default: null }, v: { default: 0 }, width: { default: 100 }, caption: { default: "" }, fit: { default: 1 } };
   },
   parseHTML() {
     return [{ tag: "figure[data-drawing]", getAttrs: (el) => ({ id: (el as HTMLElement).dataset.drawing }) }];
@@ -268,6 +268,7 @@ export const Drawing = Node.create({
       let current = node;
       const paint = () => {
         img.src = `/files/drawings/${current.attrs.id}.svg?v=${current.attrs.v}`;
+        img.style.width = fitWidth(current.attrs.fit) ?? "";
         dom.style.maxWidth = `${current.attrs.width || 100}%`;
         cap.textContent = current.attrs.caption ?? "";
         cap.hidden = !current.attrs.caption;

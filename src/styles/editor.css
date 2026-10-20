@@ -188,9 +188,14 @@
 .dw-custom { width: 28px; height: 28px; padding: 0; border: 0; background: none; cursor: pointer; }
 .dw-dot { display: block; width: var(--s); height: var(--s); border-radius: 50%; background: currentColor; }
 .dw-select { width: auto !important; padding: 0.3em 0.5em !important; font-size: 0.85rem !important; }
-.dw-scroll { flex: 1; overflow: auto; padding: 12px; -webkit-overflow-scrolling: touch; }
+.dw-scroll { position: relative; flex: 1; overflow: auto; padding: 12px; -webkit-overflow-scrolling: touch; }
 .dw-canvas { display: block; margin: 0 auto; background: #fff; box-shadow: var(--shadow-md); touch-action: none; cursor: crosshair; }
-.dw-canvas[data-mode="eraser"] { cursor: cell; }
+.dw-canvas[data-mode="delete"] { cursor: cell; }
+.dw-canvas[data-mode="eraser"] { cursor: none; }
+.dw-canvas[data-mode="text"] { cursor: text; }
+.dw-canvas[data-mode="move"] { cursor: default; }
+.dw-icon { display: grid; place-items: center; }
+.dw-text { position: absolute; z-index: 1; margin: 0; padding: 2px; border: 1px dashed var(--color-primary-300) !important; border-radius: 3px; background: rgba(255,255,255,.6) !important; outline: none !important; resize: none; overflow: hidden; white-space: pre; min-width: 0 !important; min-height: 0; box-shadow: none !important; }
 @media (max-width: 700px) {
   .dw-toolbar { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
   .dw-group { flex: none; }
