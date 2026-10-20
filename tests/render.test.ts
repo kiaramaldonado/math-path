@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { cleanDrawing, toSvg } from "../src/lib/drawing";
+import { visibleSpaces } from "../src/lib/latex";
 import { docText, type JMark, type JNode, renderDoc, toEmbedUrl } from "../src/lib/render";
 
 const doc = (...content: JNode[]): JNode => ({ type: "doc", content });
@@ -45,6 +46,26 @@ describe("renderDoc", () => {
     expect(html).toContain(">}</span>");
     expect(html).toContain("for all n");
     expect(html).toContain("mspace"); // \quad and "\ " become real spacing
+  });
+
+  it("makes plain spaces between words and numbers visible, leaving LaTeX's own spaces alone", () => {
+    expect(visibleSpaces("x y")).toBe("x\\ y");
+    expect(visibleSpaces("2  apples")).toBe("2\\ \\ apples");
+    expect(visibleSpaces("f(x) g(x)")).toBe("f(x)\\ g(x)");
+    // Already-valid formulas keep their meaning.
+    for (const latex of [
+      "a + b = c",
+      "\\alpha b",
+      "\\sum_{i=1}^{n} x_i",
+      "\\int_{a}^{b} f(x) \\, dx",
+      "\\begin{array}{c c} a & b \\\\ c & d \\end{array}",
+      "\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}",
+      "\\text{if } x > 0",
+      "\\text{for all n}",
+      "A =\\ \\{ 1, 2 \\}",
+    ])
+      expect(visibleSpaces(latex)).toBe(latex);
+    expect(renderDoc(doc({ type: "inlineMath", attrs: { latex: "x y" } }))).toContain("mspace");
   });
 
   it("does not throw on broken LaTeX", () => {
