@@ -65,6 +65,9 @@ Click any formula to edit it. The editor shows a live preview and a palette of s
 (fractions, integrals, matrices, Greek letters, sets and logic). Formulas use
 [KaTeX](https://katex.org/docs/supported.html), which supports almost all common LaTeX.
 
+Spaces you type between words or numbers show up as spaces (`x y`, `2 apples`) — no backslash needed.
+Use `\quad` for a wider gap, `\text{…}` for words and `\{ \}` for visible braces.
+
 ### Drawings
 
 The drawing canvas is full screen:
