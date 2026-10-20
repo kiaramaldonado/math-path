@@ -82,6 +82,12 @@ function percent(raw: unknown, fallback = 100): number {
   return Number.isFinite(n) && n >= 10 && n <= 100 ? Math.round(n) : fallback;
 }
 
+/** Cropped drawings keep the canvas scale: `fit` is their width as a share of the canvas (0–1]. */
+export function fitWidth(raw: unknown): string | null {
+  const n = Number(raw);
+  return Number.isFinite(n) && n > 0 && n < 1 ? `${Math.max(5, Math.round(n * 1000) / 10)}%` : null;
+}
+
 function alignStyle(attrs: Record<string, unknown> | undefined): string {
   const a = attrs?.textAlign;
   return a === "center" || a === "right" || a === "justify" ? ` style="text-align:${a}"` : "";
@@ -211,7 +217,7 @@ export function renderNode(node: JNode): string {
     case "drawing": {
       const id = String(a.id ?? "");
       if (!/^[a-z0-9-]{8,64}$/.test(id)) return "";
-      return `<figure class="figure drawing" style="max-width:${percent(a.width)}%"><img src="/files/drawings/${id}.svg?v=${Number(a.v) || 0}" alt="${esc(a.caption || "Drawing")}" loading="lazy">${figcaption(a.caption)}</figure>`;
+      return `<figure class="figure drawing" style="max-width:${percent(a.width)}%"><img src="/files/drawings/${id}.svg?v=${Number(a.v) || 0}" alt="${esc(a.caption || "Drawing")}" loading="lazy"${fitWidth(a.fit) ? ` style="width:${fitWidth(a.fit)}"` : ""}>${figcaption(a.caption)}</figure>`;
     }
     case "embed": {
       const src = safeEmbed(a.src);
