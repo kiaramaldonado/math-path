@@ -33,7 +33,7 @@ whether I'm on my laptop, my iPad or my phone.
 - Notebook → sections → pages, reorderable, with drafts and publishing per page, section and notebook.
 - Block editor: headings, colours, highlights, lists, checklists, tables, links (including to your own pages), code.
 - **Formulas** in LaTeX, rendered with KaTeX: type `$x^2$` inline or `$$` for a centred equation, with a live preview and a symbol palette.
-- **Drawings** in any colour: pen (pressure-sensitive with Apple Pencil), highlighter, lines, arrows, shapes, eraser, grid/graph-paper backgrounds. Editable afterwards.
+- **Drawings** in any colour: pen (pressure-sensitive with Apple Pencil), highlighter, lines, arrows, shapes, text, fill bucket, eraser, grid/graph-paper backgrounds. Editable afterwards.
 - Images (paste, drag, or phone camera), Definition / Theorem / Proof / Example boxes, YouTube, Desmos and GeoGebra embeds.
 - Type `/` for everything. Autosave, with recovery if the connection drops.
 
