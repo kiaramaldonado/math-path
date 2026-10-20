@@ -76,9 +76,10 @@
 
 /* ───────── ProseMirror ───────── */
 .mp-prose { outline: none; max-width: none; min-height: 50vh; }
-.mp-prose h1 { font-size: 1.6rem; margin: 2rem 0 0.6rem; }
-.mp-prose h2 { font-size: 1.25rem; margin: 1.6rem 0 0.5rem; font-family: var(--font-body); }
-.mp-prose h3 { font-size: 1.05rem; margin: 1.3rem 0 0.4rem; font-family: var(--font-body); }
+.prose.mp-prose h1, .prose.mp-prose h2, .prose.mp-prose h3 { font-family: var(--font-heading); font-weight: 600; letter-spacing: -0.01em; }
+.prose.mp-prose h1 { font-size: 1.75rem; margin: 2rem 0 0.6rem; }
+.prose.mp-prose h2 { font-size: 1.4rem; margin: 1.7rem 0 0.5rem; }
+.prose.mp-prose h3 { font-size: 1.17rem; margin: 1.4rem 0 0.45rem; }
 .mp-prose p.is-editor-empty:first-child::before,
 .mp-prose .is-empty::before { content: attr(data-placeholder); color: var(--color-ink-400); float: left; height: 0; pointer-events: none; }
 .mp-prose .ProseMirror-selectednode { outline: 2px solid var(--color-primary-300); outline-offset: 2px; border-radius: var(--radius-sm); }

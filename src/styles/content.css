@@ -8,9 +8,13 @@
   overflow-wrap: break-word;
 }
 .prose > :first-child { margin-top: 0; }
-.prose h2 { font-size: 1.6rem; margin: 2rem 0 0.6rem; }
-.prose h3 { font-size: 1.25rem; margin: 1.6rem 0 0.5rem; }
-.prose h4, .prose h5 { font-size: 1.05rem; margin: 1.3rem 0 0.4rem; }
+/* Content headings: one font, and Heading 1 > 2 > 3. Public pages render level n as h(n+1)
+   (the page title is the h1); the editor uses h(n) — see the matching .mp-prose rules. */
+.prose h2, .prose h3, .prose h4, .prose h5 { font-family: var(--font-heading); font-weight: 600; letter-spacing: -0.01em; }
+.prose h2 { font-size: 1.75rem; margin: 2rem 0 0.6rem; }
+.prose h3 { font-size: 1.4rem; margin: 1.7rem 0 0.5rem; }
+.prose h4 { font-size: 1.17rem; margin: 1.4rem 0 0.45rem; }
+.prose h5 { font-size: 1.05rem; margin: 1.3rem 0 0.4rem; }
 .prose p { margin: 0 0 0.9em; }
 .prose ul, .prose ol { padding-left: 1.5em; margin: 0 0 1em; }
 .prose li > p { margin: 0 0 0.25em; }
